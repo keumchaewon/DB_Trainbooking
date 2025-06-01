@@ -9,3 +9,4 @@
 # .gitignore
 # DB 비밀번호 포함된 클래스
 src/main/java/com/team/project/ConnectionManager.java
+/target/
