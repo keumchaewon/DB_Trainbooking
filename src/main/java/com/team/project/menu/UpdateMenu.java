@@ -1,7 +1,7 @@
 package com.team.project.menu;
 import java.util.Scanner;
 import java.sql.*;
-import java.util.Scanner;
+
 public class UpdateMenu {
     public static void updateUserInfo(Scanner scanner) {
         try (Connection conn = DatabaseManager.getConnection()) {
