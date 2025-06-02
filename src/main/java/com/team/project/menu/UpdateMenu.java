@@ -1,35 +1,44 @@
 package com.team.project.menu;
 
-import java.util.Scanner;
-
-import com.team.project.ConnectionManager;
-
 import java.sql.*;
 import java.util.Scanner;
+import com.team.project.ConnectionManager;
 
 public class UpdateMenu {
     public static void run(Scanner sc) {
-        System.out.println("\n[Update Menu]");
-        System.out.println("1. 사용자 연락처 수정");
-        System.out.println("2. 예약 좌석 변경");
-        System.out.print("선택: ");
-        int choice = sc.nextInt();
+        while(true) {
+            System.out.println("\n--- 수정 메뉴 ---");
+            System.out.println("1. 사용자 연락처 수정");
+            System.out.println("2. 예약 좌석 변경");
+            System.out.println("0. 메인 메뉴로 돌아가기");
+            System.out.print("선택: ");
 
-        try (Connection conn = ConnectionManager.getConnection()) {
-            switch (choice) {
-                case 1 -> updateUserContact(conn, sc);
-                case 2 -> updateReservationSeat(conn, sc);
-                default -> System.out.println("잘못된 선택");
+            String input = sc.nextLine();
+            if (input.equals("0")) return;
+
+            switch (input) {
+                case "1" -> {
+                    try (Connection conn = ConnectionManager.getConnection()) {
+                        updateUserContact(conn, sc);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                case "2" -> {
+                    try (Connection conn = ConnectionManager.getConnection()) {
+                        updateReservationSeat(conn, sc);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                default -> System.out.println("잘못된 입력입니다.");
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
-    // 사용자 연락처 수정
     private static void updateUserContact(Connection conn, Scanner sc) throws SQLException {
         System.out.print("수정할 사용자 ID: ");
-        int userId = sc.nextInt(); sc.nextLine();
+        int userId = Integer.parseInt(sc.nextLine());
         System.out.print("새 전화번호: ");
         String phone = sc.nextLine();
         System.out.print("새 이메일: ");
@@ -41,22 +50,20 @@ public class UpdateMenu {
             pstmt.setString(2, email);
             pstmt.setInt(3, userId);
             int updated = pstmt.executeUpdate();
-            System.out.println(updated > 0 ? "수정 완료" : " 사용자 없음");
+            System.out.println(updated > 0 ? "수정 완료" : "사용자 없음");
         }
     }
 
-    // 예약 좌석 변경
     private static void updateReservationSeat(Connection conn, Scanner sc) throws SQLException {
-        // 트랜젝션
         conn.setAutoCommit(false);
         try (
-                PreparedStatement updateRes = conn.prepareStatement("UPDATE reservation SET seat_id = ? WHERE reservation_id = ?"); //예약한 좌석
-                PreparedStatement markSeat = conn.prepareStatement("UPDATE seat SET is_reserved = 1 WHERE seat_id = ?"); //바꿀 좌석
+            PreparedStatement updateRes = conn.prepareStatement("UPDATE reservation SET seat_id = ? WHERE reservation_id = ?");
+            PreparedStatement markSeat = conn.prepareStatement("UPDATE seat SET is_reserved = 1 WHERE seat_id = ?");
         ) {
             System.out.print("예약 ID: ");
-            int resId = sc.nextInt();
+            int resId = Integer.parseInt(sc.nextLine());
             System.out.print("새 좌석 ID: ");
-            int seatId = sc.nextInt();
+            int seatId = Integer.parseInt(sc.nextLine());
 
             updateRes.setInt(1, seatId);
             updateRes.setInt(2, resId);
@@ -70,9 +77,9 @@ public class UpdateMenu {
         } catch (Exception e) {
             conn.rollback();
             System.out.println("트랜잭션 롤백됨");
+            e.printStackTrace();
         } finally {
             conn.setAutoCommit(true);
         }
     }
 }
-
