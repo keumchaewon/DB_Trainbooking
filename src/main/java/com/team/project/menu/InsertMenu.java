@@ -6,7 +6,7 @@ import com.team.project.ConnectionManager;
 
 public class InsertMenu {
     public static void insertSeat(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter schedule_id:");
             int schedule_id = Integer.parseInt(scanner.nextLine());
 
@@ -28,7 +28,7 @@ public class InsertMenu {
         }
     }
     public static void insertReservation(Scanner scanner) { //transaction
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
             try {
