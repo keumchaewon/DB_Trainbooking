@@ -1,10 +1,39 @@
 package com.team.project.menu;
 import java.sql.*;
 import java.util.Scanner;
+import com.team.project.ConnectionManager;
 
+// com.team.project.menu.InsertMenu.java 내부에 추가
 public class InsertMenu {
+
+    public static void run(Scanner scanner) {
+        while (true) {
+            System.out.println("\n--- 등록 메뉴 ---");
+            System.out.println("1. 사용자 등록");
+            System.out.println("2. 열차 등록");
+            System.out.println("3. 노선 등록");
+            System.out.println("4. 스케줄 등록");
+            System.out.println("5. 좌석 등록");
+            System.out.println("6. 예약 등록");
+            System.out.println("0. 메인 메뉴로 돌아가기");
+            System.out.print("선택: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> insertUser(scanner);
+                case "2" -> insertTrain(scanner);
+                case "3" -> insertRoute(scanner);
+                case "4" -> insertSchedule(scanner);
+                case "5" -> insertSeat(scanner);
+                case "6" -> insertReservation(scanner);
+                case "0" -> { return; }
+                default -> System.out.println("잘못된 입력입니다.");
+            }
+        }
+    }
     public static void insertUser(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter name:");
             String name = scanner.nextLine();
 
@@ -25,8 +54,9 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertTrain(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter train_name:");
             String train_name = scanner.nextLine();
 
@@ -43,8 +73,9 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertRoute(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter start_station:");
             String start_station = scanner.nextLine();
 
@@ -61,8 +92,9 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertSchedule(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn =ConnectionManager.getConnection()) {
             System.out.print("Enter train_id:");
             int train_id = Integer.parseInt(scanner.nextLine());
 
@@ -89,7 +121,7 @@ public class InsertMenu {
         }
     }
     public static void insertSeat(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter schedule_id:");
             int schedule_id = Integer.parseInt(scanner.nextLine());
 
@@ -110,8 +142,9 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertReservation(Scanner scanner) { //transaction
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
             try {
