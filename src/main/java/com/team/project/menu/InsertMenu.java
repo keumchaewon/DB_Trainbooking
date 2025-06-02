@@ -1,9 +1,9 @@
 package com.team.project.menu;
+
 import java.sql.*;
 import java.util.Scanner;
 import com.team.project.ConnectionManager;
 
-// com.team.project.menu.InsertMenu.java 내부에 추가
 public class InsertMenu {
 
     public static void run(Scanner scanner) {
@@ -32,6 +32,7 @@ public class InsertMenu {
             }
         }
     }
+
     public static void insertUser(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter name:");
@@ -94,7 +95,7 @@ public class InsertMenu {
     }
 
     public static void insertSchedule(Scanner scanner) {
-        try (Connection conn =ConnectionManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter train_id:");
             int train_id = Integer.parseInt(scanner.nextLine());
 
@@ -107,7 +108,6 @@ public class InsertMenu {
             System.out.print("Enter departure_time (HH:mm:ss):");
             Time departure_time = Time.valueOf(scanner.nextLine());
 
-
             String sql = "INSERT INTO Schedule(train_id, route_id, run_date, departure_time) VALUES (?,?,?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, train_id);
@@ -115,11 +115,12 @@ public class InsertMenu {
             pstmt.setDate(3, run_date);
             pstmt.setTime(4, departure_time);
             pstmt.executeUpdate();
-            System.out.println("Route inserted!");
+            System.out.println("Schedule inserted!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     public static void insertSeat(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter schedule_id:");
@@ -137,7 +138,7 @@ public class InsertMenu {
             pstmt.setString(2, seat_number);
             pstmt.setBoolean(3, is_reserved);
             pstmt.executeUpdate();
-            System.out.println("Route inserted!");
+            System.out.println("Seat inserted!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -186,4 +187,3 @@ public class InsertMenu {
     }
 
 }
-
