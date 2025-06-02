@@ -1,10 +1,31 @@
 package com.team.project.menu;
 import java.util.Scanner;
+import com.team.project.ConnectionManager;
+import com.team.project.Main;
+
 import java.sql.*;
 
 public class UpdateMenu {
+    public static void run(Scanner scanner) {
+        while (true) {
+            System.out.println("\n--- 수정 메뉴 ---");
+            System.out.println("1. 사용자 정보 수정");
+            System.out.println("2. 예약 정보 수정");
+            System.out.println("0. 메인 메뉴로 돌아가기");
+            System.out.print("선택: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> UpdateMenu.updateUserInfo(scanner);
+                case "2" -> UpdateMenu.updateReservation(scanner);
+                case "0" -> { return; }
+                default -> System.out.println("잘못된 입력입니다.");
+            }
+        }
+    }
     public static void updateUserInfo(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter user ID to update: ");
             int userId = Integer.parseInt(scanner.nextLine());
 
@@ -33,7 +54,7 @@ public class UpdateMenu {
     }
 
     public static void updateReservation(Scanner scanner) { //transaction
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
             try {
