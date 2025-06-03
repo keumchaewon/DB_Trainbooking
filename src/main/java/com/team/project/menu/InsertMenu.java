@@ -8,15 +8,14 @@ public class InsertMenu {
 
     public static void run(Scanner scanner) {
         while (true) {
-            System.out.println("\n--- 등록 메뉴 ---");
-            System.out.println("1. 사용자 등록");
-            System.out.println("2. 열차 등록");
-            System.out.println("3. 노선 등록");
-            System.out.println("4. 스케줄 등록");
-            System.out.println("5. 좌석 등록");
-            System.out.println("6. 예약 등록");
-            System.out.println("0. 메인 메뉴로 돌아가기");
-            System.out.print("선택: ");
+            System.out.println("\n[Insert Menu]");
+            System.out.println("1. User Registration");
+            System.out.println("2. Train Registration");
+            System.out.println("3. Route Registration");
+            System.out.println("4. Schedule Registration");
+            System.out.println("5. Seat Registration");
+            System.out.println("6. Reservation Registration");
+            System.out.print("Select option: ");
 
             String choice = scanner.nextLine();
 
@@ -27,8 +26,7 @@ public class InsertMenu {
                 case "4" -> insertSchedule(scanner);
                 case "5" -> insertSeat(scanner);
                 case "6" -> insertReservation(scanner);
-                case "0" -> { return; }
-                default -> System.out.println("잘못된 입력입니다.");
+                default -> System.out.println("Invalid option.");
             }
         }
     }
@@ -50,7 +48,7 @@ public class InsertMenu {
             pstmt.setString(2, phone);
             pstmt.setString(3, email);
             pstmt.executeUpdate();
-            System.out.println("User inserted!");
+            System.out.println("User registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -69,7 +67,7 @@ public class InsertMenu {
             pstmt.setString(1, train_name);
             pstmt.setString(2, train_type);
             pstmt.executeUpdate();
-            System.out.println("Train inserted!");
+            System.out.println("Train registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -88,7 +86,7 @@ public class InsertMenu {
             pstmt.setString(1, start_station);
             pstmt.setString(2, end_station);
             pstmt.executeUpdate();
-            System.out.println("Route inserted!");
+            System.out.println("Route registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -115,7 +113,7 @@ public class InsertMenu {
             pstmt.setDate(3, run_date);
             pstmt.setTime(4, departure_time);
             pstmt.executeUpdate();
-            System.out.println("Schedule inserted!");
+            System.out.println("Schedule registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -138,7 +136,7 @@ public class InsertMenu {
             pstmt.setString(2, seat_number);
             pstmt.setBoolean(3, is_reserved);
             pstmt.executeUpdate();
-            System.out.println("Seat inserted!");
+            System.out.println("Seat registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -173,11 +171,11 @@ public class InsertMenu {
                 updateStmt.executeUpdate();
 
                 conn.commit();
-                System.out.println("Reservation inserted and seat marked as reserved.");
+                System.out.println("Reservation registered!");
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("Transaction rolled back due to error.");
+                System.out.println("Error!");
                 e.printStackTrace();
             }
 
