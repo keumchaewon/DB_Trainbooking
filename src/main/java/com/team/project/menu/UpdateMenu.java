@@ -7,11 +7,10 @@ import com.team.project.ConnectionManager;
 public class UpdateMenu {
     public static void run(Scanner sc) {
         while(true) {
-            System.out.println("\n--- 수정 메뉴 ---");
-            System.out.println("1. 사용자 연락처 수정");
-            System.out.println("2. 예약 좌석 변경");
-            System.out.println("0. 메인 메뉴로 돌아가기");
-            System.out.print("선택: ");
+            System.out.println("\n[Update Menu]");
+            System.out.println("1. Edit user contact information");
+            System.out.println("2. Change reserved seat");
+            System.out.print("Select option: ");
 
             String input = sc.nextLine();
             if (input.equals("0")) return;
@@ -31,17 +30,17 @@ public class UpdateMenu {
                         e.printStackTrace();
                     }
                 }
-                default -> System.out.println("잘못된 입력입니다.");
+                default -> System.out.println("Invalid Option.");
             }
         }
     }
 
     private static void updateUserContact(Connection conn, Scanner sc) throws SQLException {
-        System.out.print("수정할 사용자 ID: ");
+        System.out.print("User ID to modify: ");
         int userId = Integer.parseInt(sc.nextLine());
-        System.out.print("새 전화번호: ");
+        System.out.print("New phone number: ");
         String phone = sc.nextLine();
-        System.out.print("새 이메일: ");
+        System.out.print("New email: ");
         String email = sc.nextLine();
 
         String sql = "UPDATE user SET phone = ?, email = ? WHERE user_id = ?";
@@ -50,7 +49,7 @@ public class UpdateMenu {
             pstmt.setString(2, email);
             pstmt.setInt(3, userId);
             int updated = pstmt.executeUpdate();
-            System.out.println(updated > 0 ? "수정 완료" : "사용자 없음");
+            System.out.println(updated > 0 ? "Modified successfully!" : "No matched user");
         }
     }
 
@@ -60,9 +59,9 @@ public class UpdateMenu {
             PreparedStatement updateRes = conn.prepareStatement("UPDATE reservation SET seat_id = ? WHERE reservation_id = ?");
             PreparedStatement markSeat = conn.prepareStatement("UPDATE seat SET is_reserved = 1 WHERE seat_id = ?");
         ) {
-            System.out.print("예약 ID: ");
+            System.out.print("Reservation ID: ");
             int resId = Integer.parseInt(sc.nextLine());
-            System.out.print("새 좌석 ID: ");
+            System.out.print("New seat ID: ");
             int seatId = Integer.parseInt(sc.nextLine());
 
             updateRes.setInt(1, seatId);
@@ -73,13 +72,14 @@ public class UpdateMenu {
             markSeat.executeUpdate();
 
             conn.commit();
-            System.out.println("좌석 변경 완료");
+            System.out.println("Seat change completed");
         } catch (Exception e) {
             conn.rollback();
-            System.out.println("트랜잭션 롤백됨");
+            System.out.println("Error!");
             e.printStackTrace();
         } finally {
             conn.setAutoCommit(true);
         }
     }
 }
+
