@@ -1,126 +1,135 @@
-package com.team.project;
-
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
             while (true) {
-                // 메인 메뉴
-                System.out.println("\n=== 기차 예매 시스템 ===");
-                System.out.println("1. 기차표 예매하기");
-                System.out.println("2. 예약 조회/수정");
-                System.out.println("3. 예약 취소");
-                System.out.println("4. 회원 정보 관리");
-                System.out.println("0. 종료");
-                System.out.print("번호 입력: ");
+                // Main Menu
+                System.out.println("\n=== Train Reservation System ===");
+                System.out.println("1. Customer Menu");
+                System.out.println("2. Staff Menu");
+                System.out.println("0. Exit");
+                System.out.print("Please select a menu: ");
                 int choice = sc.nextInt();
-                sc.nextLine();  // 버퍼 비우기
+                sc.nextLine();  // Clear buffer
 
                 switch (choice) {
-                    case 1 -> BookingMenu.run(sc);         // 기차표 예매
-                    case 2 -> ReservationMenu.run(sc);     // 예약 조회 및 수정
-                    case 3 -> CancelMenu.run(sc);          // 예약 취소
-                    case 4 -> UserMenu.run(sc);            // 회원 정보 관리
+                    case 1 -> customerMenu(sc);       // Customer Menu
+                    case 2 -> staffMenu(sc);          // Staff Menu
                     case 0 -> {
-                        System.out.println("프로그램을 종료합니다.");
-                        return;
+                        System.out.println("Exiting the program.");
+                        return;  // Exit the program
                     }
-                    default -> System.out.println("잘못된 선택입니다.");
+                    default -> System.out.println("Invalid choice, please try again.");
                 }
             }
         }
     }
 
-    // 기차표 예매
-    public static class BookingMenu {
-        public static void run(Scanner scanner) {
-            System.out.println("\n=== 기차표 예매 ===");
-            System.out.print("출발지 입력: ");
-            String departure = scanner.nextLine();
-            System.out.print("도착지 입력: ");
-            String destination = scanner.nextLine();
+    // Customer Menu
+    private static void customerMenu(Scanner sc) {
+        System.out.println("\n[ Customer Menu ]");
+        System.out.println("1. Train Booking / Inquiry");
+        System.out.println("2. Reservation Management");
+        System.out.println("3. User Management");
+        System.out.println("0. Back to Main Menu");
+        System.out.print("Select option: ");
+        int choice = sc.nextInt();
+        sc.nextLine();
 
-            // 열차 선택
-            System.out.println("가능한 열차 목록을 조회합니다...");
-            System.out.print("원하는 열차 번호 선택: ");
-            String trainChoice = scanner.nextLine();
-
-            // 좌석 선택
-            System.out.println("가능한 좌석을 조회합니다...");
-            System.out.print("원하는 좌석 번호 선택: ");
-            String seatChoice = scanner.nextLine();
-
-            // 예매 완료
-            System.out.println("기차표 예매가 완료되었습니다.");
+        switch (choice) {
+            case 1 -> trainBookingInquiryMenu(sc);   // Train Booking / Inquiry
+            case 2 -> reservationManagementMenu(sc);  // Reservation Management
+            case 3 -> userManagementMenu(sc);         // User Management
+            case 0 -> System.out.println("Returning to Main Menu.");
+            default -> System.out.println("Invalid option, please try again.");
         }
     }
 
-    // 예약 조회/수정
-    public static class ReservationMenu {
-        public static void run(Scanner scanner) {
-            System.out.println("\n=== 예약 조회/수정 ===");
-            System.out.print("예약 ID 입력: ");
-            String reservationId = scanner.nextLine();
+    // Train Booking / Inquiry Menu
+    private static void trainBookingInquiryMenu(Scanner sc) {
+        System.out.println("\n[ Train Booking / Inquiry ]");
+        System.out.println("1. Book Train Ticket");
+        System.out.println("2. View Available Trains");
+        System.out.println("3. View Reservation Details");
+        System.out.println("4. Confirm Train Ticket Booking");
+        System.out.println("0. Back to Customer Menu");
+        System.out.print("Select option: ");
+        int choice = sc.nextInt();
+        sc.nextLine();
 
-            // 예약 정보 조회
-            System.out.println("예약 정보를 조회합니다...");
-            System.out.print("수정할 항목 선택 (1. 출발지, 2. 도착지, 3. 좌석): ");
-            String choice = scanner.nextLine();
-
-            // 수정 진행
-            if (choice.equals("1")) {
-                System.out.print("새로운 출발지 입력: ");
-                String newDeparture = scanner.nextLine();
-                System.out.println("출발지가 수정되었습니다.");
-            } else if (choice.equals("2")) {
-                System.out.print("새로운 도착지 입력: ");
-                String newDestination = scanner.nextLine();
-                System.out.println("도착지가 수정되었습니다.");
-            } else if (choice.equals("3")) {
-                System.out.print("새로운 좌석 번호 입력: ");
-                String newSeat = scanner.nextLine();
-                System.out.println("좌석이 수정되었습니다.");
-            } else {
-                System.out.println("잘못된 선택입니다.");
-            }
+        switch (choice) {
+            case 1 -> BookingMenu.run(sc);                  // Book Train Ticket
+            case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
+            case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
+            case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking
+            case 0 -> customerMenu(sc);                      // Back to Customer Menu
+            default -> System.out.println("Invalid option, please try again.");
         }
     }
 
-    // 예약 취소
-    public static class CancelMenu {
-        public static void run(Scanner scanner) {
-            System.out.println("\n=== 예약 취소 ===");
-            System.out.print("취소할 예약 ID 입력: ");
-            String reservationId = scanner.nextLine();
+    // Reservation Management Menu
+    private static void reservationManagementMenu(Scanner sc) {
+        System.out.println("\n[ Reservation Management ]");
+        System.out.println("1. View Reservation");
+        System.out.println("2. Modify Reservation");
+        System.out.println("3. Cancel Reservation");
+        System.out.println("0. Back to Customer Menu");
+        System.out.print("Select option: ");
+        int choice = sc.nextInt();
+        sc.nextLine();
 
-            // 예약 취소 진행
-            System.out.println("예약이 취소되었습니다.");
+        switch (choice) {
+            case 1 -> ReservationMenu.viewReservation(sc);   // View Reservation
+            case 2 -> ReservationMenu.modifyReservation(sc);  // Modify Reservation
+            case 3 -> CancelMenu.run(sc);                     // Cancel Reservation
+            case 0 -> customerMenu(sc);                       // Back to Customer Menu
+            default -> System.out.println("Invalid option, please try again.");
         }
     }
 
-    // 회원 정보 관리
-    public static class UserMenu {
-        public static void run(Scanner scanner) {
-            while (true) {
-                System.out.println("\n=== 회원 정보 관리 ===");
-                System.out.println("1. 회원 정보 조회");
-                System.out.println("2. 회원 정보 수정");
-                System.out.println("0. 메인 메뉴로 돌아가기");
-                System.out.print("선택: ");
-                String choice = scanner.nextLine();
+    // User Management Menu
+    private static void userManagementMenu(Scanner sc) {
+        System.out.println("\n[ User Management ]");
+        System.out.println("1. Register User");
+        System.out.println("2. Edit User Information");
+        System.out.println("3. Delete User");
+        System.out.println("0. Back to Customer Menu");
+        System.out.print("Select option: ");
+        String choice = sc.nextLine();
 
-                switch (choice) {
-                    case "1" -> {
-                        System.out.println("회원 정보를 조회합니다...");
-                    }
-                    case "2" -> {
-                        System.out.println("회원 정보를 수정합니다...");
-                    }
-                    case "0" -> { return; }
-                    default -> System.out.println("잘못된 입력입니다.");
-                }
-            }
+        switch (choice) {
+            case "1" -> UserMenu.registerUser(sc);          // Register User
+            case "2" -> UserMenu.updateUserInfo(sc);        // Edit User Information
+            case "3" -> UserMenu.deleteUser(sc);            // Delete User
+            case "0" -> customerMenu(sc);                   // Back to Customer Menu
+            default -> System.out.println("Invalid option, please try again.");
+        }
+    }
+
+    // Staff Menu
+    private static void staffMenu(Scanner sc) {
+        System.out.println("\n=== Staff Menu ===");
+        System.out.println("1. Register Train");
+        System.out.println("2. Register Route");
+        System.out.println("3. Register Schedule");
+        System.out.println("4. Register Seat");
+        System.out.println("5. Register Reservation");
+        System.out.println("6. View Train Information");
+        System.out.println("0. Back to Main Menu");
+        System.out.print("Select option: ");
+        int choice = sc.nextInt();
+        sc.nextLine();
+
+        switch (choice) {
+            case 1 -> InsertMenu.insertTrain(sc);        // Register Train
+            case 2 -> InsertMenu.insertRoute(sc);        // Register Route
+            case 3 -> InsertMenu.insertSchedule(sc);     // Register Schedule
+            case 4 -> InsertMenu.insertSeat(sc);         // Register Seat
+            case 5 -> InsertMenu.insertReservation(sc);  // Register Reservation
+            case 6 -> SelectMenu.showTrainInfo(sc);      // View Train Information
+            case 0 -> System.out.println("Returning to Main Menu.");
+            default -> System.out.println("Invalid option, please try again.");
         }
     }
 }

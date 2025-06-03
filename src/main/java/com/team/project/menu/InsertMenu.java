@@ -5,8 +5,122 @@ import java.util.Scanner;
 import com.team.project.ConnectionManager;
 
 public class InsertMenu {
+
+    public static void run(Scanner scanner) {
+        while (true) {
+            System.out.println("\n[Insert Menu]");
+            System.out.println("1. User Registration");
+            System.out.println("2. Train Registration");
+            System.out.println("3. Route Registration");
+            System.out.println("4. Schedule Registration");
+            System.out.println("5. Seat Registration");
+            System.out.println("6. Reservation Registration");
+            System.out.print("Select option: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1" -> insertUser(scanner);
+                case "2" -> insertTrain(scanner);
+                case "3" -> insertRoute(scanner);
+                case "4" -> insertSchedule(scanner);
+                case "5" -> insertSeat(scanner);
+                case "6" -> insertReservation(scanner);
+                default -> System.out.println("Invalid option.");
+            }
+        }
+    }
+
+    public static void insertUser(Scanner scanner) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            System.out.print("Enter name:");
+            String name = scanner.nextLine();
+
+            System.out.print("Enter phone number:");
+            String phone = scanner.nextLine();
+
+            System.out.print("Enter email address:");
+            String email = scanner.nextLine();
+
+            String sql = "INSERT INTO User(name, phone, email) VALUES (?,?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, name);
+            pstmt.setString(2, phone);
+            pstmt.setString(3, email);
+            pstmt.executeUpdate();
+            System.out.println("User registered!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void insertTrain(Scanner scanner) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            System.out.print("Enter train_name:");
+            String train_name = scanner.nextLine();
+
+            System.out.print("Enter train_type:");
+            String train_type = scanner.nextLine();
+
+            String sql = "INSERT INTO Train(train_name, train_type) VALUES (?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, train_name);
+            pstmt.setString(2, train_type);
+            pstmt.executeUpdate();
+            System.out.println("Train registered!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void insertRoute(Scanner scanner) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            System.out.print("Enter start_station:");
+            String start_station = scanner.nextLine();
+
+            System.out.print("Enter end_station:");
+            String end_station = scanner.nextLine();
+
+            String sql = "INSERT INTO Route(start_station, end_station) VALUES (?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, start_station);
+            pstmt.setString(2, end_station);
+            pstmt.executeUpdate();
+            System.out.println("Route registered!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void insertSchedule(Scanner scanner) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            System.out.print("Enter train_id:");
+            int train_id = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter route_id:");
+            int route_id = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter run_date (yyyy-mm-dd):");
+            Date run_date = Date.valueOf(scanner.nextLine());
+
+            System.out.print("Enter departure_time (HH:mm:ss):");
+            Time departure_time = Time.valueOf(scanner.nextLine());
+
+            String sql = "INSERT INTO Schedule(train_id, route_id, run_date, departure_time) VALUES (?,?,?,?)";
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, train_id);
+            pstmt.setInt(2, route_id);
+            pstmt.setDate(3, run_date);
+            pstmt.setTime(4, departure_time);
+            pstmt.executeUpdate();
+            System.out.println("Schedule registered!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void insertSeat(Scanner scanner) {
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter schedule_id:");
             int schedule_id = Integer.parseInt(scanner.nextLine());
 
@@ -22,13 +136,14 @@ public class InsertMenu {
             pstmt.setString(2, seat_number);
             pstmt.setBoolean(3, is_reserved);
             pstmt.executeUpdate();
-            System.out.println("Route inserted!");
+            System.out.println("Seat registered!");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
     public static void insertReservation(Scanner scanner) { //transaction
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
             try {
@@ -56,11 +171,11 @@ public class InsertMenu {
                 updateStmt.executeUpdate();
 
                 conn.commit();
-                System.out.println("Reservation inserted and seat marked as reserved.");
+                System.out.println("Reservation registered!");
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("Transaction rolled back due to error.");
+                System.out.println("Error!");
                 e.printStackTrace();
             }
 
@@ -70,4 +185,3 @@ public class InsertMenu {
     }
 
 }
-
