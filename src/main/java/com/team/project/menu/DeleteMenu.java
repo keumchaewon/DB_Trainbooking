@@ -57,7 +57,7 @@ public class DeleteMenu {
             }
         } catch (Exception e) {
             conn.rollback();
-            System.out.println("Transaction failed");
+            System.out.println("Error!");
         } finally {
             conn.setAutoCommit(true);
         }
