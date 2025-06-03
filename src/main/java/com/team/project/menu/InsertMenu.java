@@ -26,7 +26,6 @@ public class InsertMenu {
                 case "4" -> insertSchedule(scanner);
                 case "5" -> insertSeat(scanner);
                 case "6" -> insertReservation(scanner);
-                case "0" -> { return; }
                 default -> System.out.println("Invalid option.");
             }
         }
