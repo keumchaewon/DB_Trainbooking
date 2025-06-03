@@ -65,14 +65,14 @@ public class DeleteMenu {
 
     //2. 사용자 삭제의 경우
     private static void deleteUser(Connection conn, Scanner sc) throws SQLException {
-        System.out.print("삭제할 사용자 ID: ");
+        System.out.print("User ID to delete: ");
         int userId = sc.nextInt();
 
         String sql = "DELETE FROM user WHERE user_id = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
             int deleted = pstmt.executeUpdate();
-            System.out.println(deleted > 0 ? "사용자 삭제 완료" : "사용자 없음");
+            System.out.println(deleted > 0 ? "User deleted successfully" : "User not found");
         }
     }
 }
