@@ -1,3 +1,10 @@
+package com.team.project;
+
+import com.team.project.menu.InsertMenu;
+import com.team.project.menu.SelectMenu;
+import com.team.project.menu.DeleteMenu;
+import com.team.project.menu.UpdateMenu;
+
 import java.util.Scanner;
 
 public class Main {
@@ -59,7 +66,7 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> BookingMenu.run(sc);                  // Book Train Ticket
+            case 1 -> InsertMenu.BookingMenu.run(sc);                  // Book Train Ticket -> insert인듯
             case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
             case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
             case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking
@@ -80,9 +87,9 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> ReservationMenu.viewReservation(sc);   // View Reservation
-            case 2 -> ReservationMenu.modifyReservation(sc);  // Modify Reservation
-            case 3 -> CancelMenu.run(sc);                     // Cancel Reservation
+            case 1 -> SelectMenu.viewReservation(sc);   // View Reservation
+            case 2 -> UpdateMenu.modifyReservation(sc);  // Modify Reservation
+            case 3 -> DeleteMenu.run(sc);                     // Cancel Reservation
             case 0 -> customerMenu(sc);                       // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
         }
@@ -99,9 +106,9 @@ public class Main {
         String choice = sc.nextLine();
 
         switch (choice) {
-            case "1" -> UserMenu.registerUser(sc);          // Register User
-            case "2" -> UserMenu.updateUserInfo(sc);        // Edit User Information
-            case "3" -> UserMenu.deleteUser(sc);            // Delete User
+            case "1" -> InsertMenu.registerUser(sc);          // Register User
+            case "2" -> UpdateMenu.updateUserInfo(sc);        // Edit User Information
+            case "3" -> DeleteMenu.deleteUser(sc);            // Delete User
             case "0" -> customerMenu(sc);                   // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
         }
