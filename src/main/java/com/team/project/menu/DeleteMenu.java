@@ -7,23 +7,6 @@ import com.team.project.ConnectionManager;
 import java.sql.*;
 
 public class DeleteMenu {
-    public static void run(Scanner sc) {
-        System.out.println("\n[Delete Menu]");
-        System.out.println("1. Cancel Reservation"); //예약 취소 + 좌석 복원
-        System.out.println("2. Delete User");
-        System.out.print("Select option: ");
-        int choice = sc.nextInt();
-
-        try (Connection conn = ConnectionManager.getConnection()) {
-            switch (choice) {
-                case 1 -> deleteReservation(conn, sc); // 1. 예약 취소
-                case 2 -> deleteUser(conn, sc); // 2. 사용자 삭제
-                default -> System.out.println("Invalid option.");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     // 1. 예약 취소의 경우
     public static void deleteReservation(Scanner sc) {
