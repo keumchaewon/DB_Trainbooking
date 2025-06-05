@@ -66,7 +66,7 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> InsertMenu.insertReservation(sc);                  // Book Train Ticket
+            case 1 -> InsertMenu.insertReservation(sc);                  // Book Train Ticket          
             case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
             case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
             case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking

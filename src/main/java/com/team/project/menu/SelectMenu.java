@@ -6,13 +6,13 @@ import java.util.Scanner;
 
 public class SelectMenu {
     public static void run(Scanner sc) {
-        System.out.println("\n[조회 메뉴]");
-        System.out.println("1. 사용자 목록 조회");
-        System.out.println("2. 예약 내역 조회");
-        System.out.println("3. 잔여 좌석 조회");
-        System.out.println("4. 전체 예약 목록");
-        System.out.println("5. 조건 검색 (사용자 이름)");
-        System.out.print("선택: ");
+        System.out.println("[View Menu]");
+        System.out.println("1. View user list");
+        System.out.println("2. View reservation details");
+        System.out.println("3. View available seats");
+        System.out.println("4. View all reservations");
+        System.out.println("5. Search by condition (user name)");
+        System.out.print("Select: ");
         int choice = sc.nextInt();
         sc.nextLine();  // 개행 제거
 
@@ -23,7 +23,7 @@ public class SelectMenu {
                 case 3 -> showRemainingSeats(conn);
                 case 4 -> showAllReservations(conn);
                 case 5 -> searchReservationByCondition(conn, sc);
-                default -> System.out.println("잘못된 선택입니다.");
+                default -> System.out.println("Invalid option");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -34,9 +34,9 @@ public class SelectMenu {
         String sql = "SELECT * FROM User";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[사용자 목록]");
+            System.out.println("[User List]");
             while (rs.next()) {
-                System.out.printf("ID: %d, 이름: %s, 전화: %s, 이메일: %s%n",
+                System.out.printf("ID: %d, name: %s, phone number: %s, email: %s%n",
                         rs.getInt("user_id"),
                         rs.getString("name"),
                         rs.getString("phone"),
@@ -49,9 +49,9 @@ public class SelectMenu {
         String sql = "SELECT * FROM UserReservations"; // View 사용
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[예약 내역]");
+            System.out.println("[Reservation List]");
             while (rs.next()) {
-                System.out.printf("이름: %s, 열차: %s, 날짜: %s, 좌석: %s%n",
+                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
                         rs.getString("user_name"),
                         rs.getString("train_name"),
                         rs.getDate("run_date"),
@@ -64,9 +64,9 @@ public class SelectMenu {
         String sql = "SELECT * FROM RemainingSeats"; // View 사용
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[잔여 좌석]");
+            System.out.println("[Remaining Seats]");
             while (rs.next()) {
-                System.out.printf("좌석 ID: %d, 스케줄 ID: %d, 좌석 번호: %s%n",
+                System.out.printf("seat ID: %d, schedule ID: %d, seat: %s%n",
                         rs.getInt("seat_id"),
                         rs.getInt("schedule_id"),
                         rs.getString("seat_number"));
@@ -85,9 +85,9 @@ public class SelectMenu {
             """;
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[전체 예약 목록]");
+            System.out.println("[Reservation list]");
             while (rs.next()) {
-                System.out.printf("이름: %s, 열차: %s, 날짜: %s, 좌석: %s%n",
+                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
                         rs.getString("user_name"),
                         rs.getString("train_name"),
                         rs.getDate("run_date"),
@@ -97,7 +97,7 @@ public class SelectMenu {
     }
 
     private static void searchReservationByCondition(Connection conn, Scanner sc) throws SQLException {
-        System.out.print("조회할 사용자 이름 입력: ");
+        System.out.print("Enter the user name to view: ");
         String inputName = sc.nextLine();
 
         String sql = """
@@ -113,9 +113,9 @@ public class SelectMenu {
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, "%" + inputName + "%");
             try (ResultSet rs = stmt.executeQuery()) {
-                System.out.println("[조건 검색 결과]");
+                System.out.println("[Search results by condition]");
                 while (rs.next()) {
-                    System.out.printf("이름: %s, 열차: %s, 날짜: %s, 좌석: %s%n",
+                    System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
                             rs.getString("user_name"),
                             rs.getString("train_name"),
                             rs.getDate("run_date"),
