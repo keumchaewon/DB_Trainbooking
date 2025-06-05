@@ -1,3 +1,7 @@
+package com.team.project;
+
+import com.team.project.menu.InsertMenu;
+
 import java.util.Scanner;
 
 public class Main {
