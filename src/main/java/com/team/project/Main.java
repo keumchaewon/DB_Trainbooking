@@ -66,7 +66,7 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> InsertMenu.BookingMenu.run(sc);                  // Book Train Ticket -> insert인듯
+            case 1 -> InsertMenu.BookingMenu.run(sc);                  // Book Train Ticket
             case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
             case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
             case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking
@@ -87,9 +87,9 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> SelectMenu.viewReservation(sc);   // View Reservation
-            case 2 -> UpdateMenu.modifyReservation(sc);  // Modify Reservation
-            case 3 -> DeleteMenu.run(sc);                     // Cancel Reservation
+            case 1 -> SelectMenu.run(sc);   // View Reservation
+            case 2 -> UpdateMenu.run(sc);  // Modify Reservation
+            case 3 -> DeleteMenu.deleteReservation(sc);  // Cancel Reservation
             case 0 -> customerMenu(sc);                       // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
         }
@@ -106,8 +106,8 @@ public class Main {
         String choice = sc.nextLine();
 
         switch (choice) {
-            case "1" -> InsertMenu.registerUser(sc);          // Register User
-            case "2" -> UpdateMenu.updateUserInfo(sc);        // Edit User Information
+            case "1" -> InsertMenu.run(sc);          // Register User
+            case "2" -> UpdateMenu.run(sc);        // Edit User Information
             case "3" -> DeleteMenu.deleteUser(sc);            // Delete User
             case "0" -> customerMenu(sc);                   // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
