@@ -34,7 +34,7 @@ public class SelectMenu {
         String sql = "SELECT * FROM User";
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[User list]");
+            System.out.println("[User List]");
             while (rs.next()) {
                 System.out.printf("ID: %d, name: %s, phone number: %s, email: %s%n",
                         rs.getInt("user_id"),
@@ -49,7 +49,7 @@ public class SelectMenu {
         String sql = "SELECT * FROM UserReservations"; // View 사용
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[예약 내역]");
+            System.out.println("[Reservation List]");
             while (rs.next()) {
                 System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
                         rs.getString("user_name"),
@@ -64,7 +64,7 @@ public class SelectMenu {
         String sql = "SELECT * FROM RemainingSeats"; // View 사용
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[잔여 좌석]");
+            System.out.println("[Remaining Seats]");
             while (rs.next()) {
                 System.out.printf("seat ID: %d, schedule ID: %d, seat: %s%n",
                         rs.getInt("seat_id"),
