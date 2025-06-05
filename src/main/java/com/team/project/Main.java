@@ -88,7 +88,7 @@ public class Main {
 
         switch (choice) {
             case 1 -> SelectMenu.run(sc);   // View Reservation
-            case 2 -> UpdateMenu.run(sc);  // Modify Reservation
+            case 2 -> UpdateMenu.updateReservationSeat(sc);  // Modify Reservation
             case 3 -> DeleteMenu.deleteReservation(sc);  // Cancel Reservation
             case 0 -> customerMenu(sc);                       // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
@@ -107,7 +107,7 @@ public class Main {
 
         switch (choice) {
             case "1" -> InsertMenu.run(sc);          // Register User
-            case "2" -> UpdateMenu.run(sc);        // Edit User Information
+            case "2" -> UpdateMenu.updateUserInfo(sc);        // Edit User Contact
             case "3" -> DeleteMenu.deleteUser(sc);            // Delete User
             case "0" -> customerMenu(sc);                   // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
