@@ -15,17 +15,17 @@ public class InsertMenu {
             System.out.println("4. Schedule Registration");
             System.out.println("5. Seat Registration");
             System.out.println("6. Reservation Registration");
-            System.out.print("Select option: ");
+            System.out.print("Select: ");
 
-            String choice = scanner.nextLine();
+            int choice = scanner.nextInt();
 
             switch (choice) {
-                case "1" -> insertUser(scanner);
-                case "2" -> insertTrain(scanner);
-                case "3" -> insertRoute(scanner);
-                case "4" -> insertSchedule(scanner);
-                case "5" -> insertSeat(scanner);
-                case "6" -> insertReservation(scanner);
+                case 1 -> insertUser(scanner);
+                case 2 -> insertTrain(scanner);
+                case 3 -> insertRoute(scanner);
+                case 4 -> insertSchedule(scanner);
+                case 5 -> insertSeat(scanner);
+                case 6 -> insertReservation(scanner);
                 default -> System.out.println("Invalid option.");
             }
         }
@@ -142,7 +142,7 @@ public class InsertMenu {
         }
     }
 
-    public static void insertReservation(Scanner scanner) { //transaction
+    public static void insertReservation(Scanner scanner) { // transaction
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
@@ -156,8 +156,24 @@ public class InsertMenu {
                 System.out.print("Enter seat ID: ");
                 int seatId = Integer.parseInt(scanner.nextLine());
 
+                // [수정] 0. 해당 좌석이 예약되었는지 확인
+                String checkSql = "SELECT is_reserved FROM Seat WHERE seat_id = ?";
+                PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                checkStmt.setInt(1, seatId);
+                ResultSet rs = checkStmt.executeQuery();
+
+                if (!rs.next()) {
+                    System.out.println("Error: Seat ID not found.");
+                    conn.rollback();
+                    return;
+                } else if (rs.getBoolean("is_reserved")) {
+                    System.out.println("Error: Seat is already reserved.");
+                    conn.rollback();
+                    return;
+                }
+
                 // 1. 예약 삽입
-                String insertSql = "INSERT INTO Reservation (user_id, schedule_id, seat_id) VALUES ( ?, ?, ?)";
+                String insertSql = "INSERT INTO Reservation (user_id, schedule_id, seat_id) VALUES (?, ?, ?)";
                 PreparedStatement insertStmt = conn.prepareStatement(insertSql);
                 insertStmt.setInt(1, userId);
                 insertStmt.setInt(2, scheduleId);
@@ -175,7 +191,7 @@ public class InsertMenu {
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("Error!");
+                System.out.println("Error during reservation.");
                 e.printStackTrace();
             }
 
