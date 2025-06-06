@@ -158,7 +158,7 @@ public class SelectMenu {
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
 
-            System.out.println("\n📄 [Your Reservations]");
+            System.out.println("\n [Your Reservations]");
             boolean found = false;
             while (rs.next()) {
                 found = true;
@@ -174,7 +174,7 @@ public class SelectMenu {
             }
 
         } catch (SQLException e) {
-            System.out.println("❌ Failed to load reservations.");
+            System.out.println("Failed to load reservations.");
             e.printStackTrace();
         }
     }
@@ -227,7 +227,7 @@ public class SelectMenu {
                     ResultSet rs = stmt.executeQuery()
             ) {
                 // ✅ 여기에 모든 출력 로직 넣기
-                System.out.println("📅 Current Schedule List:");
+                System.out.println(" Current Schedule List:");
                 System.out.printf("%-5s | %-8s | %-8s | %-12s | %-10s | %-15s%n",
                         "ID", "Train ID", "Route ID", "Run Date", "Departure", "Available Seats");
                 System.out.println("-------------------------------------------------------------------------------");
@@ -246,7 +246,7 @@ public class SelectMenu {
                 System.out.println();
 
             } catch (SQLException e) {
-                System.out.println("❌ Failed to load schedule list.");
+                System.out.println("Failed to load schedule list.");
                 e.printStackTrace();
             }
 
@@ -287,14 +287,14 @@ public class SelectMenu {
                     ResultSet countRs = countStmt.executeQuery();
                     if (countRs.next()) {
                         int remaining = countRs.getInt("remaining");
-                        System.out.printf("\n🔎 Schedule ID %d - Remaining seats: %d%n", inputId, remaining);
+                        System.out.printf("\n Schedule ID %d - Remaining seats: %d%n", inputId, remaining);
                     }
                 }
 
                 if (!hasSeat) {
-                    System.out.println("❗No seat data found for this schedule.");
+                    System.out.println("No seat data found for this schedule.");
                 } else {
-                    System.out.printf("🪑 Full seat layout for Schedule ID %d:%n", inputId);
+                    System.out.printf("Full seat layout for Schedule ID %d:%n", inputId);
 
                     for (String row : seatMap.keySet()) {
                         List<String> seats = seatMap.get(row);
@@ -314,7 +314,7 @@ public class SelectMenu {
                 }
 
             } catch (SQLException e) {
-                System.out.println("❌ Failed to load seat information.");
+                System.out.println("Failed to load seat information.");
                 e.printStackTrace();
             }
 
@@ -327,10 +327,10 @@ public class SelectMenu {
                 if (input.equals("1")) {
                     break; // 다음 루프로 계속
                 } else if (input.equals("0")) {
-                    System.out.println("👋 Exiting seat inquiry menu.");
+                    System.out.println("Exiting seat inquiry menu.");
                     return; // 함수 종료
                 } else {
-                    System.out.println("❗Invalid input. Please enter 1 (Yes) or 0 (No).");
+                    System.out.println("Invalid input. Please enter 1 (Yes) or 0 (No).");
                 }
             }
 
