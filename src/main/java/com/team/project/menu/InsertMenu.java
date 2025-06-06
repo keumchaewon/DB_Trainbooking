@@ -297,13 +297,7 @@ public class InsertMenu {
 
             } catch (SQLException e) {
                 conn.rollback();
-<<<<<<< HEAD
                 System.out.println(" An error occurred while processing the reservation.");
-=======
-
-                System.out.println("Error during reservation.");
-
->>>>>>> e50ea6d38bdc52cd9d51627071af1825c56b7edd
                 e.printStackTrace();
             }
 
