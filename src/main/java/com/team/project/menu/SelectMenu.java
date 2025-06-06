@@ -3,6 +3,7 @@ package com.team.project.menu;
 import com.team.project.ConnectionManager;
 import java.sql.*;
 import java.util.Scanner;
+import java.util.*;
 
 public class SelectMenu {
     public static void run(Scanner sc) {
@@ -72,18 +73,40 @@ public class SelectMenu {
     }
 
     private static void showRemainingSeats(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM RemainingSeats"; // View 사용
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[Remaining Seats]");
+        // ✅ 0. 스케줄 목록 + 남은 좌석 수 출력
+        String scheduleListSql =
+                "SELECT s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time, " +
+                        "       COUNT(seat_id) AS remaining_seats " +
+                        "FROM Schedule s " +
+                        "LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE " +
+                        "GROUP BY s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time " +
+                        "ORDER BY s.schedule_id";
+
+        try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
+            ResultSet rs = stmt.executeQuery();
+
+            System.out.println("📅 현재 등록된 스케줄 목록:");
+            System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s | %-5s%n",
+                    "ID", "TrainID", "RouteID", "Run Date", "Departure", "잔여좌석");
+            System.out.println("------------------------------------------------------------------");
             while (rs.next()) {
-                System.out.printf("seat ID: %d, schedule ID: %d, seat: %s%n",
-                        rs.getInt("seat_id"),
-                        rs.getInt("schedule_id"),
-                        rs.getString("seat_number"));
+                int id = rs.getInt("schedule_id");
+                int trainId = rs.getInt("train_id");
+                int routeId = rs.getInt("route_id");
+                java.sql.Date runDate = rs.getDate("run_date");
+                Time departure = rs.getTime("departure_time");
+                int remaining = rs.getInt("remaining_seats");
+
+                System.out.printf("%-5d | %-7d | %-7d | %-12s | %-10s | %-5d%n",
+                        id, trainId, routeId, runDate.toString(), departure.toString(), remaining);
             }
+            System.out.println();
         }
+
+
+
     }
+
 
     public static void showAllReservations() {
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -190,42 +213,74 @@ public class SelectMenu {
     public static void showRemainingSeatsMenu(Scanner scanner) {
         while (true) {
             // 1. Show all available schedules with remaining seats
-            String summarySql = "SELECT schedule_id, COUNT(*) AS remaining_seats " +
-                    "FROM Seat WHERE is_reserved = FALSE " +
-                    "GROUP BY schedule_id ORDER BY schedule_id";
+            String scheduleListSql =
+                    "SELECT s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time, " +
+                            "       COUNT(seat_id) AS remaining_seats " +
+                            "FROM Schedule s " +
+                            "LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE " +
+                            "GROUP BY s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time " +
+                            "ORDER BY s.schedule_id";
 
-            try (Connection conn = ConnectionManager.getConnection();
-                 PreparedStatement summaryStmt = conn.prepareStatement(summarySql);
-                 ResultSet summaryRs = summaryStmt.executeQuery()) {
+            try (
+                    Connection conn = ConnectionManager.getConnection();
+                    PreparedStatement stmt = conn.prepareStatement(scheduleListSql);
+                    ResultSet rs = stmt.executeQuery()
+            ) {
+                // ✅ 여기에 모든 출력 로직 넣기
+                System.out.println("📅 Current Schedule List:");
+                System.out.printf("%-5s | %-8s | %-8s | %-12s | %-10s | %-15s%n",
+                        "ID", "Train ID", "Route ID", "Run Date", "Departure", "Available Seats");
+                System.out.println("-------------------------------------------------------------------------------");
 
-                System.out.println("\n📅 [Available Schedules with Remaining Seats]");
-                while (summaryRs.next()) {
-                    int scheduleId = summaryRs.getInt("schedule_id");
-                    int count = summaryRs.getInt("remaining_seats");
-                    System.out.printf(" - Schedule ID: %d (Remaining seats: %d)%n", scheduleId, count);
+                while (rs.next()) {
+                    int id = rs.getInt("schedule_id");
+                    int trainId = rs.getInt("train_id");
+                    int routeId = rs.getInt("route_id");
+                    java.sql.Date runDate = rs.getDate("run_date");
+                    Time departure = rs.getTime("departure_time");
+                    int remaining = rs.getInt("remaining_seats");
+
+                    System.out.printf("%-5d | %-8d | %-8d | %-12s | %-10s | %-15d%n",
+                            id, trainId, routeId, runDate.toString(), departure.toString(), remaining);
                 }
+                System.out.println();
 
             } catch (SQLException e) {
                 System.out.println("❌ Failed to load schedule list.");
                 e.printStackTrace();
-                return;
             }
+
+
+
 
             // 2. Ask user to input a schedule ID to see seat details
             System.out.print("\nEnter the Schedule ID you want to check: ");
             int inputId = Integer.parseInt(scanner.nextLine());
 
-            // 3. Show seat details for the selected schedule
-            String detailSql = "SELECT seat_id, seat_number FROM Seat " +
-                    "WHERE schedule_id = ? AND is_reserved = FALSE";
+            // 3. Show seat details (formatted by row/column)
+            String detailSql = "SELECT seat_number, is_reserved FROM Seat WHERE schedule_id = ?";
 
             try (Connection conn = ConnectionManager.getConnection();
                  PreparedStatement detailStmt = conn.prepareStatement(detailSql)) {
 
                 detailStmt.setInt(1, inputId);
-                ResultSet detailRs = detailStmt.executeQuery();
+                ResultSet rs = detailStmt.executeQuery();
 
-                // Also show remaining seat count again
+                Map<String, List<String>> seatMap = new TreeMap<>();               // row 별 좌석 저장
+                Map<String, Boolean> seatReservedMap = new HashMap<>();            // seat_number → 예약 여부
+                boolean hasSeat = false;
+
+                while (rs.next()) {
+                    hasSeat = true;
+                    String seatNumber = rs.getString("seat_number");
+                    boolean reserved = rs.getBoolean("is_reserved");
+                    String row = seatNumber.replaceAll("[^A-Z]", "");
+
+                    seatMap.computeIfAbsent(row, k -> new ArrayList<>()).add(seatNumber);
+                    seatReservedMap.put(seatNumber, reserved);
+                }
+
+                // 잔여 좌석 수 출력
                 String countSql = "SELECT COUNT(*) AS remaining FROM Seat WHERE schedule_id = ? AND is_reserved = FALSE";
                 try (PreparedStatement countStmt = conn.prepareStatement(countSql)) {
                     countStmt.setInt(1, inputId);
@@ -236,17 +291,26 @@ public class SelectMenu {
                     }
                 }
 
-                System.out.printf("🪑 Available Seats for Schedule ID %d:%n", inputId);
-                boolean found = false;
-                while (detailRs.next()) {
-                    found = true;
-                    System.out.printf(" - Seat ID: %d, Seat Number: %s%n",
-                            detailRs.getInt("seat_id"),
-                            detailRs.getString("seat_number"));
-                }
+                if (!hasSeat) {
+                    System.out.println("❗No seat data found for this schedule.");
+                } else {
+                    System.out.printf("🪑 Full seat layout for Schedule ID %d:%n", inputId);
 
-                if (!found) {
-                    System.out.println("❗No available seats for this schedule.");
+                    for (String row : seatMap.keySet()) {
+                        List<String> seats = seatMap.get(row);
+                        // 숫자 기준 정렬
+                        seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
+
+                        System.out.print(row + " row: ");
+                        for (String sn : seats) {
+                            if (seatReservedMap.getOrDefault(sn, true)) {
+                                System.out.print(" --  ");
+                            } else {
+                                System.out.print("[" + sn + "] ");
+                            }
+                        }
+                        System.out.println();
+                    }
                 }
 
             } catch (SQLException e) {
@@ -254,15 +318,25 @@ public class SelectMenu {
                 e.printStackTrace();
             }
 
-            // 4. Ask if user wants to check another schedule
-            System.out.print("\nDo you want to check another schedule? (1: Yes / 0: No): ");
-            int again = Integer.parseInt(scanner.nextLine());
-            if (again == 0) {
-                System.out.println("Exiting seat inquiry menu.");
-                break;
+
+            // 4. Repeat menu
+            while (true) {
+                System.out.print("\nDo you want to check another schedule? (1: Yes / 0: No): ");
+                String input = scanner.nextLine().trim();
+
+                if (input.equals("1")) {
+                    break; // 다음 루프로 계속
+                } else if (input.equals("0")) {
+                    System.out.println("👋 Exiting seat inquiry menu.");
+                    return; // 함수 종료
+                } else {
+                    System.out.println("❗Invalid input. Please enter 1 (Yes) or 0 (No).");
+                }
             }
+
         }
     }
+
 
 
 

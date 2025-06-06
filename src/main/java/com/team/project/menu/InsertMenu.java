@@ -1,8 +1,9 @@
 package com.team.project.menu;
-
+import java.util.*;
 import java.sql.*;
 import java.util.Scanner;
 import com.team.project.ConnectionManager;
+import java.util.*;
 
 public class InsertMenu {
 
@@ -101,10 +102,10 @@ public class InsertMenu {
             int route_id = Integer.parseInt(scanner.nextLine());
 
             System.out.print("Enter run_date (yyyy-mm-dd):");
-            Date run_date = Date.valueOf(scanner.nextLine());
+            java.sql.Date run_date = java.sql.Date.valueOf(scanner.nextLine());
 
             System.out.print("Enter departure_time (HH:mm:ss):");
-            Time departure_time = Time.valueOf(scanner.nextLine());
+            java.sql.Time departure_time = java.sql.Time.valueOf(scanner.nextLine());
 
             String sql = "INSERT INTO Schedule(train_id, route_id, run_date, departure_time) VALUES (?,?,?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -147,6 +148,27 @@ public class InsertMenu {
             conn.setAutoCommit(false);
 
             try {
+                String scheduleListSql = "SELECT schedule_id, train_id, route_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
+                try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
+                    ResultSet rs = stmt.executeQuery();
+
+                    System.out.println("📅 현재 등록된 스케줄 목록:");
+                    System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s%n",
+                            "ID", "TrainID", "RouteID", "Run Date", "Departure");
+                    System.out.println("------------------------------------------------------");
+                    while (rs.next()) {
+                        int id = rs.getInt("schedule_id");
+                        int trainId = rs.getInt("train_id");
+                        int routeId = rs.getInt("route_id");
+                        java.sql.Date runDate = rs.getDate("run_date");
+                        Time departure = rs.getTime("departure_time");
+
+                        System.out.printf("%-5d | %-7d | %-7d | %-12s | %-10s%n",
+                                id, trainId, routeId, runDate.toString(), departure.toString());
+                    }
+                    System.out.println(); // 빈 줄 추가
+                }
+
                 // 1. schedule_id 입력
                 System.out.print("Enter schedule ID: ");
                 int scheduleId = Integer.parseInt(scanner.nextLine());
@@ -162,33 +184,63 @@ public class InsertMenu {
                     }
                 }
 
-                // 2. 남은 좌석 보여주기
-                System.out.println("📋 예약 가능한 좌석 목록:");
-                String showSeatsSql = "SELECT seat_id FROM Seat WHERE schedule_id = ? AND is_reserved = FALSE";
-                try (PreparedStatement showStmt = conn.prepareStatement(showSeatsSql)) {
-                    showStmt.setInt(1, scheduleId);
-                    ResultSet rs = showStmt.executeQuery();
+                // 2. 남은 좌석 보여주기 (그림 형식 + 줄바꿈)
+                System.out.println("\n🪑 전체 좌석 현황 (예약된 좌석은 -- 로 표시):");
+                String showAllSeatsSql = "SELECT seat_number, is_reserved FROM Seat WHERE schedule_id = ?";
 
-                    boolean hasAvailable = false;
+                Map<String, List<String>> seatMap = new TreeMap<>();  // A, B, C... 줄별
+                try (PreparedStatement stmt = conn.prepareStatement(showAllSeatsSql)) {
+                    stmt.setInt(1, scheduleId);
+                    ResultSet rs = stmt.executeQuery();
+
+                    boolean hasSeat = false;
+                    Map<String, Boolean> seatReservedMap = new HashMap<>(); // seat_number → 예약 여부
+
                     while (rs.next()) {
-                        hasAvailable = true;
-                        System.out.println(" - Seat ID: " + rs.getInt("seat_id"));
+                        hasSeat = true;
+                        String seatNumber = rs.getString("seat_number");
+                        boolean reserved = rs.getBoolean("is_reserved");
+                        String row = seatNumber.replaceAll("[^A-Z]", "");  // 예: A, B 등
+
+                        seatMap.computeIfAbsent(row, k -> new ArrayList<>()).add(seatNumber);
+                        seatReservedMap.put(seatNumber, reserved);
                     }
 
-                    if (!hasAvailable) {
-                        System.out.println("❗예약 가능한 좌석이 없습니다.");
+                    if (!hasSeat) {
+                        System.out.println("❗좌석 정보가 존재하지 않습니다.");
                         return;
                     }
+
+                    for (String row : seatMap.keySet()) {
+                        System.out.print(row + "열: ");
+                        List<String> seats = seatMap.get(row);
+
+                        // 숫자 기준 정렬
+                        seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
+
+                        for (String sn : seats) {
+                            if (seatReservedMap.getOrDefault(sn, false)) {
+                                System.out.print(" --  ");
+                            } else {
+                                System.out.print("[" + sn + "] ");
+                            }
+                        }
+                        System.out.println();
+                    }
+                    System.out.println();
                 }
 
-                // 3. seat_id 선택
-                System.out.print("Enter seat ID to reserve: ");
-                int seatId = Integer.parseInt(scanner.nextLine());
 
-                // ✅ seat_id 유효성 확인
-                String checkSeatSql = "SELECT is_reserved FROM Seat WHERE seat_id = ? AND schedule_id = ?";
+
+                // 3. seat_number 입력
+                System.out.print("Enter seat number to reserve (e.g., A1): ");
+                String seatNumber = scanner.nextLine().trim().toUpperCase();
+
+                // ✅ seat_number 유효성 확인 및 seat_id 조회
+                String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
+                int seatId = -1;
                 try (PreparedStatement checkSeatStmt = conn.prepareStatement(checkSeatSql)) {
-                    checkSeatStmt.setInt(1, seatId);
+                    checkSeatStmt.setString(1, seatNumber);
                     checkSeatStmt.setInt(2, scheduleId);
                     ResultSet rs = checkSeatStmt.executeQuery();
 
@@ -200,6 +252,7 @@ public class InsertMenu {
                         System.out.println("❗이미 예약된 좌석입니다.");
                         return;
                     }
+                    seatId = rs.getInt("seat_id");
                 }
 
                 // 4. user_id 입력
@@ -249,5 +302,6 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
 
 }
