@@ -6,24 +6,6 @@ import java.util.Scanner;
 import java.util.*;
 
 public class SelectMenu {
-    public static void run(Scanner sc) {
-        System.out.println("[View Menu]");
-        int choice = sc.nextInt();
-        sc.nextLine();  // 개행 제거
-
-        try (Connection conn = ConnectionManager.getConnection()) {
-            switch (choice) {
-                case 1 -> showUsers(conn);
-                case 2 -> showReservations(conn);
-                case 3 -> showRemainingSeats(conn);
-                case 4 -> showAllReservations(conn);
-                case 5 -> searchReservationByCondition(conn, sc);
-                default -> System.out.println("Invalid option");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     private static void showUsers(Connection conn) throws SQLException {
         String sql = "SELECT * FROM User";
