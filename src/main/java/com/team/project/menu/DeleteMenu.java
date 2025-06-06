@@ -32,7 +32,7 @@ public class DeleteMenu {
                 PreparedStatement freeSeat = conn.prepareStatement("UPDATE seat SET is_reserved = 0 WHERE seat_id = ?");
         ) {
             System.out.print("Enter your name: ");
-            String name = sc.next();
+            String name = sc.nextLine();
 
             // 사용자 ID 찾기
             findUser.setString(1, name);
@@ -66,6 +66,7 @@ public class DeleteMenu {
             // 삭제할 예약 선택
             System.out.print("Enter Reservation ID to cancel: ");
             int resIdToCancel = sc.nextInt();
+            sc.nextLine(); // 버퍼 정리
 
             // seat_id 알아오기
             findReservations.setInt(1, userId);
@@ -103,6 +104,7 @@ public class DeleteMenu {
     }
 
 
+
     //2. 사용자 삭제의 경우
     public static void deleteUser(Scanner sc) {
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -115,7 +117,7 @@ public class DeleteMenu {
     // 내부 처리용 private 메서드
     private static void deleteUser(Connection conn, Scanner sc) throws SQLException {
         System.out.print("Enter user name to delete: ");
-        String name = sc.next();
+        String name = sc.nextLine();
 
         String sql = "DELETE FROM user WHERE name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -124,5 +126,6 @@ public class DeleteMenu {
             System.out.println(deleted > 0 ? "User deleted successfully." : "User not found.");
         }
     }
+
 }
 

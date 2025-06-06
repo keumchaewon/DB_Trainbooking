@@ -78,7 +78,7 @@ public class Main {
             System.out.println("\n[ Train Booking / Inquiry ]");
             System.out.println("1. Book Train Ticket");
             System.out.println("2. View Available Trains");
-            System.out.println("3. View Reservation Details");
+            //System.out.println("3. View Reservation Details");
             //System.out.println("4. Confirm Train Ticket Booking");
             System.out.println("0. Back to Customer Menu");
             System.out.print("Select option: ");
@@ -88,7 +88,7 @@ public class Main {
             switch (choice) {
                 case 1 -> InsertMenu.insertReservation(sc);
                 case 2 -> SelectMenu.showRemainingSeatsMenu(sc);
-                case 3 -> SelectMenu.showUserReservations(sc);
+                //case 3 -> SelectMenu.showUserReservations(sc);
                 // case 4 -> SelectMenu.confirmReservation(sc);
                 case 0 -> {
                     System.out.println("Returning to Customer Menu.");
@@ -104,7 +104,7 @@ public class Main {
         while (true) {
             System.out.println("\n[ Reservation Management ]");
             System.out.println("1. View Reservation");
-            System.out.println("2. Modify Reservation");
+            System.out.println("2. Seat Change");
             System.out.println("3. Cancel Reservation");
             System.out.println("0. Back to Customer Menu");
             System.out.print("Select option: ");
@@ -112,7 +112,7 @@ public class Main {
             sc.nextLine();
 
             switch (choice) {
-                case 1 -> SelectMenu.showReservations();
+                case 1 -> SelectMenu.showUserReservations(sc);
                 case 2 -> UpdateMenu.updateReservationSeat(sc);
                 case 3 -> DeleteMenu.deleteReservation(sc);
                 case 0 -> {
