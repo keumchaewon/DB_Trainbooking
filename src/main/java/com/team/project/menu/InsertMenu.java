@@ -152,7 +152,7 @@ public class InsertMenu {
                 try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
                     ResultSet rs = stmt.executeQuery();
 
-                    System.out.println("📅 현재 등록된 스케줄 목록:");
+                    System.out.println("Train Schedule Overview:");
                     System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s%n",
                             "ID", "TrainID", "RouteID", "Run Date", "Departure");
                     System.out.println("------------------------------------------------------");
@@ -179,7 +179,7 @@ public class InsertMenu {
                     checkScheduleStmt.setInt(1, scheduleId);
                     ResultSet rs = checkScheduleStmt.executeQuery();
                     if (rs.next() && rs.getInt(1) == 0) {
-                        System.out.println("❗해당 schedule_id는 존재하지 않습니다.");
+                        System.out.println("No schedule found with the given ID");
                         return;
                     }
                 }
@@ -207,12 +207,12 @@ public class InsertMenu {
                     }
 
                     if (!hasSeat) {
-                        System.out.println("❗좌석 정보가 존재하지 않습니다.");
+                        System.out.println("No seat information available.");
                         return;
                     }
 
                     for (String row : seatMap.keySet()) {
-                        System.out.print(row + "열: ");
+                        System.out.print(row + "row : ");
                         List<String> seats = seatMap.get(row);
 
                         // 숫자 기준 정렬
@@ -245,11 +245,11 @@ public class InsertMenu {
                     ResultSet rs = checkSeatStmt.executeQuery();
 
                     if (!rs.next()) {
-                        System.out.println("❗해당 좌석은 존재하지 않거나 스케줄에 포함되지 않습니다.");
+                        System.out.println("The selected seat does not exist or is not part of the schedule.");
                         return;
                     }
                     if (rs.getBoolean("is_reserved")) {
-                        System.out.println("❗이미 예약된 좌석입니다.");
+                        System.out.println("This seat has already been reserved.");
                         return;
                     }
                     seatId = rs.getInt("seat_id");
@@ -266,7 +266,7 @@ public class InsertMenu {
                     ResultSet rs = checkUserStmt.executeQuery();
 
                     if (rs.next() && rs.getInt(1) == 0) {
-                        System.out.println("❗해당 user_id는 존재하지 않습니다.");
+                        System.out.println("No user found with the given ID.");
                         return;
                     }
                 }
@@ -289,16 +289,16 @@ public class InsertMenu {
                 }
 
                 conn.commit();
-                System.out.println("✅ 예약이 성공적으로 완료되었습니다!");
+                System.out.println("Reservation completed successfully!");
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("🚫 예약 처리 중 오류가 발생했습니다.");
+                System.out.println(" An error occurred while processing the reservation.");
                 e.printStackTrace();
             }
 
         } catch (SQLException e) {
-            System.out.println("🚫 DB 연결에 실패했습니다.");
+            System.out.println("Database connection failed.");
             e.printStackTrace();
         }
     }
