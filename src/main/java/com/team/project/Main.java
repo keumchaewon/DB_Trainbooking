@@ -96,6 +96,7 @@ public class Main {
                 }
                 default -> System.out.println("Invalid option, please try again.");
             }
+
         }
     }
 
