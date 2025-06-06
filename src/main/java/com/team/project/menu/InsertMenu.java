@@ -7,31 +7,6 @@ import java.util.*;
 
 public class InsertMenu {
 
-    public static void run(Scanner scanner) {
-        while (true) {
-            System.out.println("\n[Insert Menu]");
-            System.out.println("1. User Registration");
-            System.out.println("2. Train Registration");
-            System.out.println("3. Route Registration");
-            System.out.println("4. Schedule Registration");
-            System.out.println("5. Seat Registration");
-            System.out.println("6. Reservation Registration");
-            System.out.print("Select: ");
-
-            int choice = scanner.nextInt();
-
-            switch (choice) {
-                case 1 -> insertUser(scanner);
-                case 2 -> insertTrain(scanner);
-                case 3 -> insertRoute(scanner);
-                case 4 -> insertSchedule(scanner);
-                case 5 -> insertSeat(scanner);
-                case 6 -> insertReservation(scanner);
-                default -> System.out.println("Invalid option.");
-            }
-        }
-    }
-
     public static void insertUser(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.print("Enter name:");
