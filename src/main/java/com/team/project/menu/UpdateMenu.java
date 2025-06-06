@@ -16,7 +16,7 @@ public class UpdateMenu {
     }
 
     private static void updateUserInfo(Connection conn, Scanner sc) throws SQLException {
-        System.out.print("Enter your name: ");
+        System.out.print("Enter your current name: ");
         String name = sc.nextLine();
 
         String findSql = "SELECT user_id FROM user WHERE name = ?";
@@ -33,20 +33,51 @@ public class UpdateMenu {
             userId = rs.getInt("user_id");
         }
 
-        System.out.print("New phone number: ");
-        String phone = sc.nextLine();
-        System.out.print("New email: ");
-        String email = sc.nextLine();
+        // 메뉴 출력
+        System.out.println("\nWhich information do you want to update?");
+        System.out.println("1. Name");
+        System.out.println("2. Phone number");
+        System.out.println("3. Email");
+        System.out.print("Select option: ");
+        int option = Integer.parseInt(sc.nextLine());
 
-        String updateSql = "UPDATE user SET phone = ?, email = ? WHERE user_id = ?";
-        try (PreparedStatement pstmt = conn.prepareStatement(updateSql)) {
-            pstmt.setString(1, phone);
-            pstmt.setString(2, email);
-            pstmt.setInt(3, userId);
-            int updated = pstmt.executeUpdate();
-            System.out.println(updated > 0 ? "Modified successfully!" : "Update failed.");
+        String updateSql = null;
+        String newValue = null;
+        String columnName = null;
+
+        switch (option) {
+            case 1 -> {
+                System.out.print("Enter new name: ");
+                newValue = sc.nextLine();
+                updateSql = "UPDATE user SET name = ? WHERE user_id = ?";
+                columnName = "Name";
+            }
+            case 2 -> {
+                System.out.print("Enter new phone number: ");
+                newValue = sc.nextLine();
+                updateSql = "UPDATE user SET phone = ? WHERE user_id = ?";
+                columnName = "Phone number";
+            }
+            case 3 -> {
+                System.out.print("Enter new email: ");
+                newValue = sc.nextLine();
+                updateSql = "UPDATE user SET email = ? WHERE user_id = ?";
+                columnName = "Email";
+            }
+            default -> {
+                System.out.println("Invalid selection.");
+                return;
+            }
+        }
+
+        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+            updateStmt.setString(1, newValue);
+            updateStmt.setInt(2, userId);
+            int updated = updateStmt.executeUpdate();
+            System.out.println(updated > 0 ? columnName + " updated successfully!" : "Update failed.");
         }
     }
+
 
     // 2. 사용자 예약 변경
     public static void updateReservationSeat(Scanner sc) {
