@@ -16,17 +16,17 @@ public class InsertMenu {
             System.out.println("4. Schedule Registration");
             System.out.println("5. Seat Registration");
             System.out.println("6. Reservation Registration");
-            System.out.print("Select option: ");
+            System.out.print("Select: ");
 
-            String choice = scanner.nextLine();
+            int choice = scanner.nextInt();
 
             switch (choice) {
-                case "1" -> insertUser(scanner);
-                case "2" -> insertTrain(scanner);
-                case "3" -> insertRoute(scanner);
-                case "4" -> insertSchedule(scanner);
-                case "5" -> insertSeat(scanner);
-                case "6" -> insertReservation(scanner);
+                case 1 -> insertUser(scanner);
+                case 2 -> insertTrain(scanner);
+                case 3 -> insertRoute(scanner);
+                case 4 -> insertSchedule(scanner);
+                case 5 -> insertSeat(scanner);
+                case 6 -> insertReservation(scanner);
                 default -> System.out.println("Invalid option.");
             }
         }
@@ -143,7 +143,9 @@ public class InsertMenu {
         }
     }
 
+
     public static void insertReservation(Scanner scanner) {
+
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
@@ -172,6 +174,7 @@ public class InsertMenu {
                 // 1. schedule_id 입력
                 System.out.print("Enter schedule ID: ");
                 int scheduleId = Integer.parseInt(scanner.nextLine());
+
 
                 // ✅ schedule_id 유효성 확인
                 String checkScheduleSql = "SELECT COUNT(*) FROM Schedule WHERE schedule_id = ?";
@@ -259,6 +262,7 @@ public class InsertMenu {
                 System.out.print("Enter user ID: ");
                 int userId = Integer.parseInt(scanner.nextLine());
 
+
                 // ✅ user_id 유효성 확인
                 String checkUserSql = "SELECT COUNT(*) FROM User WHERE user_id = ?";
                 try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
@@ -293,7 +297,9 @@ public class InsertMenu {
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("🚫 예약 처리 중 오류가 발생했습니다.");
+
+                System.out.println("Error during reservation.");
+
                 e.printStackTrace();
             }
 
