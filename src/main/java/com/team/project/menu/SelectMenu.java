@@ -45,6 +45,14 @@ public class SelectMenu {
         }
     }
 
+    public static void showReservations() {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            showReservations(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void showReservations(Connection conn) throws SQLException {
         String sql = "SELECT * FROM UserReservations"; // View 사용
         try (PreparedStatement stmt = conn.prepareStatement(sql);
@@ -57,6 +65,15 @@ public class SelectMenu {
                         rs.getDate("run_date"),
                         rs.getString("seat_number"));
             }
+        }
+    }
+
+
+    public static void showRemainingSeats() {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            showRemainingSeats(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -74,15 +91,23 @@ public class SelectMenu {
         }
     }
 
+    public static void showAllReservations() {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            showAllReservations(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void showAllReservations(Connection conn) throws SQLException {
         String sql = """
-            SELECT u.name AS user_name, r.reservation_id, t.train_name, s.run_date, st.seat_number
-            FROM Reservation r
-            JOIN User u ON r.user_id = u.user_id
-            JOIN Schedule s ON r.schedule_id = s.schedule_id
-            JOIN Train t ON s.train_id = t.train_id
-            JOIN Seat st ON r.seat_id = st.seat_id
-            """;
+        SELECT u.name AS user_name, r.reservation_id, t.train_name, s.run_date, st.seat_number
+        FROM Reservation r
+        JOIN User u ON r.user_id = u.user_id
+        JOIN Schedule s ON r.schedule_id = s.schedule_id
+        JOIN Train t ON s.train_id = t.train_id
+        JOIN Seat st ON r.seat_id = st.seat_id
+        """;
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
             System.out.println("[Reservation list]");
@@ -95,6 +120,7 @@ public class SelectMenu {
             }
         }
     }
+
 
     private static void searchReservationByCondition(Connection conn, Scanner sc) throws SQLException {
         System.out.print("Enter the user name to view: ");

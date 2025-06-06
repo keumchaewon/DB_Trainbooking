@@ -142,7 +142,7 @@ public class InsertMenu {
         }
     }
 
-    public static void insertReservation(Scanner scanner) { //transaction
+    public static void insertReservation(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
 
@@ -150,38 +150,54 @@ public class InsertMenu {
                 System.out.print("Enter user ID: ");
                 int userId = Integer.parseInt(scanner.nextLine());
 
+                // ✅ 1. user_id 존재 여부 확인
+                String checkUserSql = "SELECT COUNT(*) FROM User WHERE user_id = ?";
+                try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
+                    checkUserStmt.setInt(1, userId);
+                    ResultSet rs = checkUserStmt.executeQuery();
+
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        System.out.println("❗해당 user_id는 존재하지 않습니다. 먼저 사용자 등록을 해주세요.");
+                        return; // 예약 진행하지 않고 종료
+                    }
+                }
+
                 System.out.print("Enter schedule ID: ");
                 int scheduleId = Integer.parseInt(scanner.nextLine());
 
                 System.out.print("Enter seat ID: ");
                 int seatId = Integer.parseInt(scanner.nextLine());
 
-                // 1. 예약 삽입
-                String insertSql = "INSERT INTO Reservation (user_id, schedule_id, seat_id) VALUES ( ?, ?, ?)";
-                PreparedStatement insertStmt = conn.prepareStatement(insertSql);
-                insertStmt.setInt(1, userId);
-                insertStmt.setInt(2, scheduleId);
-                insertStmt.setInt(3, seatId);
-                insertStmt.executeUpdate();
+                // ✅ 2. 예약 삽입
+                String insertSql = "INSERT INTO Reservation (user_id, schedule_id, seat_id) VALUES (?, ?, ?)";
+                try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                    insertStmt.setInt(1, userId);
+                    insertStmt.setInt(2, scheduleId);
+                    insertStmt.setInt(3, seatId);
+                    insertStmt.executeUpdate();
+                }
 
-                // 2. 좌석 예약 상태 변경
+                // ✅ 3. 좌석 예약 상태 변경
                 String updateSql = "UPDATE Seat SET is_reserved = TRUE WHERE seat_id = ?";
-                PreparedStatement updateStmt = conn.prepareStatement(updateSql);
-                updateStmt.setInt(1, seatId);
-                updateStmt.executeUpdate();
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                    updateStmt.setInt(1, seatId);
+                    updateStmt.executeUpdate();
+                }
 
                 conn.commit();
-                System.out.println("Reservation registered!");
+                System.out.println("✅ Reservation registered!");
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println("Error!");
+                System.out.println("🚫 예약 중 오류가 발생했습니다.");
                 e.printStackTrace();
             }
 
         } catch (SQLException e) {
+            System.out.println("🚫 DB 연결에 실패했습니다.");
             e.printStackTrace();
         }
     }
+
 
 }

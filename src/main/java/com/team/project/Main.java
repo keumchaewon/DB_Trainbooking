@@ -57,7 +57,7 @@ public class Main {
     private static void trainBookingInquiryMenu(Scanner sc) {
         System.out.println("\n[ Train Booking / Inquiry ]");
         System.out.println("1. Book Train Ticket");
-        System.out.println("2. View Available Trains");
+        System.out.println("2. View Available Trains");     //이걸 남은 자리로 해도 되나...?->팀원한테 의견구하기
         System.out.println("3. View Reservation Details");
         System.out.println("4. Confirm Train Ticket Booking");
         System.out.println("0. Back to Customer Menu");
@@ -66,10 +66,10 @@ public class Main {
         sc.nextLine();
 
         switch (choice) {
-            case 1 -> InsertMenu.BookingMenu.run(sc);                  // Book Train Ticket
-            case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
-            case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
-            case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking
+            case 1 -> InsertMenu.insertReservation(sc);                  // Book Train Ticket
+            case 2 -> SelectMenu.showRemainingSeats();    // View Available Trains
+            case 3 -> SelectMenu.showAllReservations();       // View Reservation Details
+            //case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking=>3번이랑 겹치는거같은데
             case 0 -> customerMenu(sc);                      // Back to Customer Menu
             default -> System.out.println("Invalid option, please try again.");
         }
@@ -106,7 +106,7 @@ public class Main {
         String choice = sc.nextLine();
 
         switch (choice) {
-            case "1" -> InsertMenu.run(sc);          // Register User
+            case "1" -> InsertMenu.insertUser(sc);          // Register User
             case "2" -> UpdateMenu.updateUserInfo(sc);        // Edit User Contact
             case "3" -> DeleteMenu.deleteUser(sc);            // Delete User
             case "0" -> customerMenu(sc);                   // Back to Customer Menu
@@ -134,7 +134,7 @@ public class Main {
             case 3 -> InsertMenu.insertSchedule(sc);     // Register Schedule
             case 4 -> InsertMenu.insertSeat(sc);         // Register Seat
             case 5 -> InsertMenu.insertReservation(sc);  // Register Reservation
-            case 6 -> SelectMenu.showTrainInfo(sc);      // View Train Information
+            //case 6 -> SelectMenu.showTrainInfo(sc);      // View Train Information=> 이거 select 에 없는거같은데ㅜ
             case 0 -> System.out.println("Returning to Main Menu.");
             default -> System.out.println("Invalid option, please try again.");
         }
