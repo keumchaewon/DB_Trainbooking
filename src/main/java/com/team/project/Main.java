@@ -1,10 +1,16 @@
 package com.team.project;
 
 import com.team.project.menu.InsertMenu;
+import com.team.project.menu.SelectMenu;
+import com.team.project.menu.DeleteMenu;
+import com.team.project.menu.UpdateMenu;
 
 import java.util.Scanner;
 
 public class Main {
+
+    private static final String STAFF_PASSWORD = "nollback";  // 관리자 비밀번호
+
     public static void main(String[] args) {
         try (Scanner sc = new Scanner(System.in)) {
             while (true) {
@@ -19,10 +25,16 @@ public class Main {
 
                 switch (choice) {
                     case 1 -> customerMenu(sc);       // Customer Menu
-                    case 2 -> staffMenu(sc);          // Staff Menu
+                    case 2 -> {
+                        if (verifyStaffPassword(sc)) {
+                            staffMenu(sc);           // Staff Menu (with password)
+                        } else {
+                            System.out.println("Access denied. Returning to main menu.");
+                        }
+                    }
                     case 0 -> {
                         System.out.println("Exiting the program.");
-                        return;  // Exit the program
+                        return;
                     }
                     default -> System.out.println("Invalid choice, please try again.");
                 }
@@ -30,110 +42,142 @@ public class Main {
         }
     }
 
+    private static boolean verifyStaffPassword(Scanner sc) {
+        System.out.print("Enter staff password: ");
+        String input = sc.nextLine();
+        return input.equals(STAFF_PASSWORD);
+    }
+
     // Customer Menu
     private static void customerMenu(Scanner sc) {
-        System.out.println("\n[ Customer Menu ]");
-        System.out.println("1. Train Booking / Inquiry");
-        System.out.println("2. Reservation Management");
-        System.out.println("3. User Management");
-        System.out.println("0. Back to Main Menu");
-        System.out.print("Select option: ");
-        int choice = sc.nextInt();
-        sc.nextLine();
+        while (true) {  // ← 반복문 추가
+            System.out.println("\n[ Customer Menu ]");
+            System.out.println("1. Train Booking / Inquiry");
+            System.out.println("2. Reservation Management");
+            System.out.println("3. User Management");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Select option: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        switch (choice) {
-            case 1 -> trainBookingInquiryMenu(sc);   // Train Booking / Inquiry
-            case 2 -> reservationManagementMenu(sc);  // Reservation Management
-            case 3 -> userManagementMenu(sc);         // User Management
-            case 0 -> System.out.println("Returning to Main Menu.");
-            default -> System.out.println("Invalid option, please try again.");
+            switch (choice) {
+                case 1 -> trainBookingInquiryMenu(sc);      //끝나면 다시 customerMenu로
+                case 2 -> reservationManagementMenu(sc);
+                case 3 -> userManagementMenu(sc);
+                case 0 -> {
+                    System.out.println("Returning to Main Menu.");
+                    return;  // ✅ while 루프 종료 = Main Menu로 돌아감
+                }
+                default -> System.out.println("Invalid option, please try again.");
+            }
         }
     }
 
-    // Train Booking / Inquiry Menu
     private static void trainBookingInquiryMenu(Scanner sc) {
-        System.out.println("\n[ Train Booking / Inquiry ]");
-        System.out.println("1. Book Train Ticket");
-        System.out.println("2. View Available Trains");
-        System.out.println("3. View Reservation Details");
-        System.out.println("4. Confirm Train Ticket Booking");
-        System.out.println("0. Back to Customer Menu");
-        System.out.print("Select option: ");
-        int choice = sc.nextInt();
-        sc.nextLine();
+        while (true) {
+            System.out.println("\n[ Train Booking / Inquiry ]");
+            System.out.println("1. Book Train Ticket");
+            System.out.println("2. View Available Trains");
+            //System.out.println("3. View Reservation Details");
+            //System.out.println("4. Confirm Train Ticket Booking");
+            System.out.println("0. Back to Customer Menu");
+            System.out.print("Select option: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        switch (choice) {
-            case 1 -> BookingMenu.run(sc);                  // Book Train Ticket
-            case 2 -> SelectMenu.showAvailableTrains(sc);    // View Available Trains
-            case 3 -> SelectMenu.showReservations(sc);       // View Reservation Details
-            case 4 -> SelectMenu.confirmReservation(sc);     // Confirm Train Ticket Booking
-            case 0 -> customerMenu(sc);                      // Back to Customer Menu
-            default -> System.out.println("Invalid option, please try again.");
+            switch (choice) {
+                case 1 -> InsertMenu.insertReservation(sc);
+                case 2 -> SelectMenu.showRemainingSeatsMenu(sc);
+                //case 3 -> SelectMenu.showUserReservations(sc);
+                // case 4 -> SelectMenu.confirmReservation(sc);
+                case 0 -> {
+                    System.out.println("Returning to Customer Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid option, please try again.");
+            }
+
         }
     }
 
-    // Reservation Management Menu
+
     private static void reservationManagementMenu(Scanner sc) {
-        System.out.println("\n[ Reservation Management ]");
-        System.out.println("1. View Reservation");
-        System.out.println("2. Modify Reservation");
-        System.out.println("3. Cancel Reservation");
-        System.out.println("0. Back to Customer Menu");
-        System.out.print("Select option: ");
-        int choice = sc.nextInt();
-        sc.nextLine();
+        while (true) {
+            System.out.println("\n[ Reservation Management ]");
+            System.out.println("1. View Reservation");
+            System.out.println("2. Seat Change");
+            System.out.println("3. Cancel Reservation");
+            System.out.println("0. Back to Customer Menu");
+            System.out.print("Select option: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        switch (choice) {
-            case 1 -> ReservationMenu.viewReservation(sc);   // View Reservation
-            case 2 -> ReservationMenu.modifyReservation(sc);  // Modify Reservation
-            case 3 -> CancelMenu.run(sc);                     // Cancel Reservation
-            case 0 -> customerMenu(sc);                       // Back to Customer Menu
-            default -> System.out.println("Invalid option, please try again.");
+            switch (choice) {
+                case 1 -> SelectMenu.showUserReservations(sc);
+                case 2 -> UpdateMenu.updateReservationSeat(sc);
+                case 3 -> DeleteMenu.deleteReservation(sc);
+                case 0 -> {
+                    System.out.println("Returning to Customer Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid option, please try again.");
+            }
         }
     }
 
-    // User Management Menu
+
     private static void userManagementMenu(Scanner sc) {
-        System.out.println("\n[ User Management ]");
-        System.out.println("1. Register User");
-        System.out.println("2. Edit User Information");
-        System.out.println("3. Delete User");
-        System.out.println("0. Back to Customer Menu");
-        System.out.print("Select option: ");
-        String choice = sc.nextLine();
+        while (true) {
+            System.out.println("\n[ User Management ]");
+            System.out.println("1. Register User");
+            System.out.println("2. Edit User Information");
+            System.out.println("3. Delete User");
+            System.out.println("0. Back to Customer Menu");
+            System.out.print("Select option: ");
+            String choice = sc.nextLine();
 
-        switch (choice) {
-            case "1" -> UserMenu.registerUser(sc);          // Register User
-            case "2" -> UserMenu.updateUserInfo(sc);        // Edit User Information
-            case "3" -> UserMenu.deleteUser(sc);            // Delete User
-            case "0" -> customerMenu(sc);                   // Back to Customer Menu
-            default -> System.out.println("Invalid option, please try again.");
+            switch (choice) {
+                case "1" -> InsertMenu.insertUser(sc);
+                case "2" -> UpdateMenu.updateUserInfo(sc);
+                case "3" -> DeleteMenu.deleteUser(sc);
+                case "0" -> {
+                    System.out.println("Returning to Customer Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid option, please try again.");
+            }
         }
     }
 
-    // Staff Menu
+
     private static void staffMenu(Scanner sc) {
-        System.out.println("\n=== Staff Menu ===");
-        System.out.println("1. Register Train");
-        System.out.println("2. Register Route");
-        System.out.println("3. Register Schedule");
-        System.out.println("4. Register Seat");
-        System.out.println("5. Register Reservation");
-        System.out.println("6. View Train Information");
-        System.out.println("0. Back to Main Menu");
-        System.out.print("Select option: ");
-        int choice = sc.nextInt();
-        sc.nextLine();
+        while (true) {
+            System.out.println("\n=== Staff Menu ===");
+            System.out.println("1. Register Train");
+            System.out.println("2. Register Route");
+            System.out.println("3. Register Schedule");
+            System.out.println("4. Register Seat");
+            System.out.println("5. View Reservation");
+            System.out.println("6. View Train Information");
+            System.out.println("0. Back to Main Menu");
+            System.out.print("Select option: ");
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        switch (choice) {
-            case 1 -> InsertMenu.insertTrain(sc);        // Register Train
-            case 2 -> InsertMenu.insertRoute(sc);        // Register Route
-            case 3 -> InsertMenu.insertSchedule(sc);     // Register Schedule
-            case 4 -> InsertMenu.insertSeat(sc);         // Register Seat
-            case 5 -> InsertMenu.insertReservation(sc);  // Register Reservation
-            case 6 -> SelectMenu.showTrainInfo(sc);      // View Train Information
-            case 0 -> System.out.println("Returning to Main Menu.");
-            default -> System.out.println("Invalid option, please try again.");
+            switch (choice) {
+                case 1 -> InsertMenu.insertTrain(sc);
+                case 2 -> InsertMenu.insertRoute(sc);
+                case 3 -> InsertMenu.insertSchedule(sc);
+                case 4 -> InsertMenu.insertSeat(sc);
+                case 5 -> SelectMenu.showReservations();
+                // case 6 -> SelectMenu.showTrainInfo(sc);
+                case 0 -> {
+                    System.out.println("Returning to Main Menu.");
+                    return;
+                }
+                default -> System.out.println("Invalid option, please try again.");
+            }
         }
     }
+
 }
