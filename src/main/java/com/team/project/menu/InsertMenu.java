@@ -136,9 +136,7 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
-
-    public static void insertSeat(Scanner scanner) {
+    public static void insertSeat(Scanner sc) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.println("\n[Available Schedules]");
             String scheduleListSql = "SELECT schedule_id, train_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
@@ -158,32 +156,32 @@ public class InsertMenu {
                 }
                 System.out.println();
             }
+
             int schedule_id;
             while (true) {
-                schedule_id = InputValidator.getValidInt(scanner, "Enter schedule_id: ");
+                schedule_id = InputValidator.getValidInt(sc, "Enter schedule_id: ");
                 String checkScheduleSql = "SELECT COUNT(*) FROM Schedule WHERE schedule_id = ?";
                 try (PreparedStatement checkStmt = conn.prepareStatement(checkScheduleSql)) {
                     checkStmt.setInt(1, schedule_id);
                     ResultSet rs = checkStmt.executeQuery();
-                    if (rs.next() && rs.getInt(1) > 0) {
-                        break;  // 존재하면 루프 탈출
-                    }
+                    if (rs.next() && rs.getInt(1) > 0) break;
                 }
                 System.out.println("Invalid schedule_id. Please enter an existing schedule ID.");
             }
 
+            // 기존 좌석 출력
             String seatListSql = "SELECT seat_number FROM Seat WHERE schedule_id = ?";
             try (PreparedStatement seatStmt = conn.prepareStatement(seatListSql)) {
                 seatStmt.setInt(1, schedule_id);
                 ResultSet rs = seatStmt.executeQuery();
 
-                Map<Integer, List<String>> rowMap = new TreeMap<>();  // row번호 → [A, B, C]
+                Map<Integer, List<String>> rowMap = new TreeMap<>();
                 while (rs.next()) {
                     String seat = rs.getString("seat_number").toUpperCase();
-                    String rowStr = seat.replaceAll("[^0-9]", "");   // 숫자 부분 (ex. "10")
-                    String colChar = seat.replaceAll("[0-9]", "");   // 문자 부분 (ex. "A")
+                    String rowStr = seat.replaceAll("[^0-9]", "");
+                    String colChar = seat.replaceAll("[0-9]", "");
 
-                    int rowNum = Integer.parseInt(rowStr);           // 정수형으로 변환
+                    int rowNum = Integer.parseInt(rowStr);
                     rowMap.computeIfAbsent(rowNum, k -> new ArrayList<>()).add(colChar);
                 }
 
@@ -206,32 +204,46 @@ public class InsertMenu {
                 e.printStackTrace();
             }
 
-            String seat_number = InputValidator.getValidSeatNumber(scanner, "Enter seat_number (e.g., 1A): ");
+            // [수정] 행 수(n)와 열 문자(X)를 입력받아 일괄 등록
+            int numRows = InputValidator.getValidRowCount(sc, "Enter number of rows to insert (e.g., 10): ");
+            String maxCol = InputValidator.getValidColumn(sc, "Enter last column letter to insert (e.g., D): ").toUpperCase();
+            int maxColIndex = maxCol.charAt(0) - 'A';
 
-// [수정] 중복 체크: 해당 schedule에 동일한 seat_number가 있는지 확인
+            int insertedCount = 0, skippedCount = 0;
+
             String checkSql = "SELECT COUNT(*) FROM Seat WHERE schedule_id = ? AND seat_number = ?";
-            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-                checkStmt.setInt(1, schedule_id);
-                checkStmt.setString(2, seat_number);
-                ResultSet rs = checkStmt.executeQuery();
-                if (rs.next() && rs.getInt(1) > 0) {
-                    System.out.println("This seat already exists for the selected schedule.");
-                    return;
+            String insertSql = "INSERT INTO Seat(schedule_id, seat_number) VALUES (?, ?)";
+
+            for (int row = 1; row <= numRows; row++) {
+                for (int i = 0; i <= maxColIndex; i++) {
+                    String seat_number = row + String.valueOf((char) ('A' + i));
+
+                    try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+                        checkStmt.setInt(1, schedule_id);
+                        checkStmt.setString(2, seat_number);
+                        ResultSet rs = checkStmt.executeQuery();
+                        if (rs.next() && rs.getInt(1) > 0) {
+                            skippedCount++;
+                            continue;
+                        }
+                    }
+
+                    try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+                        pstmt.setInt(1, schedule_id);
+                        pstmt.setString(2, seat_number);
+                        pstmt.executeUpdate();
+                        insertedCount++;
+                    }
                 }
             }
 
-// [수정] 중복이 아니라면 INSERT 실행
-            String sql = "INSERT INTO Seat(schedule_id, seat_number) VALUES (?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, schedule_id);
-            pstmt.setString(2, seat_number);
-            pstmt.executeUpdate();
-            System.out.println("Seat registered!");
+            System.out.printf("Seat registration completed: %d inserted, %d skipped (already exists)%n",
+                    insertedCount, skippedCount);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
     public static void insertReservation(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
