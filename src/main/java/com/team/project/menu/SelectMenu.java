@@ -31,19 +31,33 @@ public class SelectMenu {
     }
 
     private static void showReservations(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM UserReservations"; // View 사용
+        String sql = "SELECT * FROM UserReservations ORDER BY run_date ASC";
+
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+
             System.out.println("[Reservation List]");
+            System.out.printf("%-12s | %-10s | %-20s | %-10s%n", "Run Date", "Train", "Name", "Seat");
+            System.out.println("------------------------------------------------------------");
+
             while (rs.next()) {
-                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
-                        rs.getString("user_name"),
-                        rs.getString("train_name"),
-                        rs.getDate("run_date"),
-                        rs.getString("seat_number"));
+                String runDate = rs.getDate("run_date").toString();
+                String train = rs.getString("train_name");
+                String name = rs.getString("user_name");
+                String seat = rs.getString("seat_number");
+
+                // 문자열이 길면 줄이기
+                //name = (name.length() > 10) ? name.substring(0, 9) + "…" : name;
+                //train = (train.length() > 15) ? train.substring(0, 14) + "…" : train;
+
+                System.out.printf("%-12s | %-10s | %-20s | %-10s%n",
+                        runDate, train, name, seat);
             }
+
+            System.out.println();
         }
     }
+
 
 
     public static void showRemainingSeats() {
