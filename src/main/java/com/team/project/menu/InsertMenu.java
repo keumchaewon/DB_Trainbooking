@@ -70,8 +70,42 @@ public class InsertMenu {
 
     public static void insertSchedule(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            System.out.print("Enter train_id:");
+
+            System.out.println("\n[Available Trains]");
+            String trainSql = "SELECT train_id, train_name FROM Train ORDER BY train_id";
+            try (PreparedStatement stmt = conn.prepareStatement(trainSql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                System.out.printf("%-5s | %-15s%n", "ID", "Train Name");
+                System.out.println("----------------------------");
+
+                while (rs.next()) {
+                    System.out.printf("%-5d | %-15s%n",
+                            rs.getInt("train_id"),
+                            rs.getString("train_name"));
+                }
+                System.out.println();
+            }
+
+            System.out.print("Enter train_id: ");
             int train_id = Integer.parseInt(scanner.nextLine());
+
+            System.out.println("\n[Available Routes]");
+            String routeSql = "SELECT route_id, start_station, end_station FROM Route ORDER BY route_id";
+            try (PreparedStatement stmt = conn.prepareStatement(routeSql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                System.out.printf("%-5s | %-18s -> %-18s%n", "ID", "From", "To");
+                System.out.println("--------------------------------------------------------");
+
+                while (rs.next()) {
+                    System.out.printf("%-5d | %-18s -> %-18s%n",
+                            rs.getInt("route_id"),
+                            rs.getString("start_station"),
+                            rs.getString("end_station"));
+                }
+                System.out.println();
+            }
 
             System.out.print("Enter route_id:");
             int route_id = Integer.parseInt(scanner.nextLine());
@@ -97,6 +131,29 @@ public class InsertMenu {
 
     public static void insertSeat(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
+
+            System.out.println("\n[Available Schedules]");
+            String scheduleListSql = "SELECT schedule_id, train_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
+
+            try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                System.out.printf("%-5s | %-7s | %-12s | %-10s%n",
+                        "ID", "TrainID", "Run Date", "Departure");
+                System.out.println("----------------------------------------------");
+
+                while (rs.next()) {
+                    int id = rs.getInt("schedule_id");
+                    int trainId = rs.getInt("train_id");
+                    java.sql.Date runDate = rs.getDate("run_date");
+                    Time departure = rs.getTime("departure_time");
+
+                    System.out.printf("%-5d | %-7d | %-12s | %-10s%n",
+                            id, trainId, runDate.toString(), departure.toString());
+                }
+                System.out.println();
+            }
+
             System.out.print("Enter schedule_id:");
             int schedule_id = Integer.parseInt(scanner.nextLine());
 
@@ -117,8 +174,6 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
-
     public static void insertReservation(Scanner scanner) {
 
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -151,7 +206,7 @@ public class InsertMenu {
                 int scheduleId = Integer.parseInt(scanner.nextLine());
 
 
-                // ✅ schedule_id 유효성 확인
+                //  schedule_id 유효성 확인
                 String checkScheduleSql = "SELECT COUNT(*) FROM Schedule WHERE schedule_id = ?";
                 try (PreparedStatement checkScheduleStmt = conn.prepareStatement(checkScheduleSql)) {
                     checkScheduleStmt.setInt(1, scheduleId);
@@ -163,7 +218,7 @@ public class InsertMenu {
                 }
 
                 // 2. 남은 좌석 보여주기 (그림 형식 + 줄바꿈)
-                System.out.println("\n🪑 전체 좌석 현황 (예약된 좌석은 -- 로 표시):");
+                System.out.println("\nAll Seats Overview");
                 String showAllSeatsSql = "SELECT seat_number, is_reserved FROM Seat WHERE schedule_id = ?";
 
                 Map<String, List<String>> seatMap = new TreeMap<>();  // A, B, C... 줄별
@@ -208,13 +263,10 @@ public class InsertMenu {
                     System.out.println();
                 }
 
-
-
                 // 3. seat_number 입력
                 System.out.print("Enter seat number to reserve (e.g., 1A): ");
                 String seatNumber = scanner.nextLine().trim().toUpperCase();
 
-                // ✅ seat_number 유효성 확인 및 seat_id 조회
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;
                 try (PreparedStatement checkSeatStmt = conn.prepareStatement(checkSeatSql)) {
@@ -238,7 +290,7 @@ public class InsertMenu {
                 int userId = Integer.parseInt(scanner.nextLine());
 
 
-                // ✅ user_id 유효성 확인
+                //  user_id 유효성 확인
                 String checkUserSql = "SELECT COUNT(*) FROM User WHERE user_id = ?";
                 try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
                     checkUserStmt.setInt(1, userId);
@@ -281,6 +333,5 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
 
 }

@@ -1,5 +1,10 @@
 package com.team.project.menu;
-
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.sql.*;
 import java.sql.Date;
 import java.util.*;
@@ -29,6 +34,7 @@ public class UpdateMenu {
         try (PreparedStatement findStmt = conn.prepareStatement(findSql)) {
             findStmt.setString(1, name);
             findStmt.setString(2, email);
+          
             ResultSet rs = findStmt.executeQuery();
 
             if (!rs.next()) {
@@ -79,6 +85,7 @@ public class UpdateMenu {
             updateStmt.setString(1, newValue);
             updateStmt.setInt(2, userId);
             int updated = updateStmt.executeUpdate();
+
             if (updated > 0) {
                 System.out.println(columnName + " updated successfully!");
 
@@ -106,7 +113,6 @@ public class UpdateMenu {
     public static void updateReservationSeat(Scanner sc) {
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
-
             try (
                     PreparedStatement findUser = conn.prepareStatement("SELECT user_id FROM user WHERE name = ? AND email = ?");
                     PreparedStatement findReservations = conn.prepareStatement(
@@ -130,6 +136,7 @@ public class UpdateMenu {
                 System.out.print("Enter your email: ");
                 String email = sc.nextLine();
 
+
                 findUser.setString(1, name);
                 findUser.setString(2, email);
                 ResultSet userRs = findUser.executeQuery();
@@ -139,12 +146,15 @@ public class UpdateMenu {
                     return;
                 }
 
+
                 int userId = userRs.getInt("user_id");
+
 
                 findReservations.setInt(1, userId);
                 ResultSet resRs = findReservations.executeQuery();
 
                 Map<Integer, Integer> reservationToScheduleMap = new HashMap<>();
+
 
                 System.out.println("\n[Your Reservations]");
                 int count = 0;
@@ -200,6 +210,7 @@ public class UpdateMenu {
                     System.out.println("No seat information available.");
                     return;
                 }
+
 
                 System.out.println("\n🪑 전체 좌석 현황 (예약된 좌석은 -- 로 표시):");
                 for (String row : seatMap.keySet()) {
