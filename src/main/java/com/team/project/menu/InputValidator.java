@@ -103,4 +103,31 @@ public class InputValidator {
             System.out.println("Invalid seat number. Format should be like '1A', '10B', etc.");
         }
     }
+
+    // [추가] 유효한 행 개수 입력 받기
+    public static int getValidRowCount(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+            try {
+                int value = Integer.parseInt(input);
+                if (value > 0 && value <= 1000) return value;
+                System.out.println("Please enter a positive integer less than or equal to 1000.");
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid number. Please enter a valid integer.");
+            }
+        }
+    }
+
+    // [추가] 유효한 열 문자 입력 받기 (A~Z)
+    public static String getValidColumn(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim().toUpperCase();
+            if (input.matches("^[A-Z]$")) {
+                return input;
+            }
+            System.out.println("Invalid input. Please enter a single uppercase letter from A to Z.");
+        }
+    }
 }
