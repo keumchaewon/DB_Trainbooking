@@ -26,8 +26,8 @@ public class InsertMenu {
 
     public static void insertTrain(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            String train_name = InputValidator.getNonEmptyString(scanner, "Enter train name: ");
-            String train_type = InputValidator.getNonEmptyString(scanner, "Enter train type: ");
+            String train_name = InputValidator.getValidTrainName(scanner, "Enter train name (e.g., KTX-100): ");
+            String train_type = InputValidator.getValidTrainType(scanner, "Enter train type");
 
             String sql = "INSERT INTO Train(train_name, train_type) VALUES (?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -39,7 +39,6 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
     public static void insertRoute(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             String start_station = InputValidator.getNonEmptyString(scanner, "Enter start station: ");
@@ -128,7 +127,7 @@ public class InsertMenu {
             }
 
             int schedule_id = InputValidator.getValidInt(scanner, "Enter schedule_id: ");
-            String seat_number = InputValidator.getNonEmptyString(scanner, "Enter seat_number: ");
+            String seat_number = InputValidator.getValidSeatNumber(scanner, "Enter seat_number (e.g., 1A): ");
             Boolean is_reserved = InputValidator.getValidBoolean(scanner, "Enter is_reserved");
 
             String sql = "INSERT INTO Seat(schedule_id, seat_number, is_reserved) VALUES (?,?,?)";
@@ -238,7 +237,7 @@ public class InsertMenu {
                     }
                 }
 
-                String seatNumber = InputValidator.getNonEmptyString(scanner, "Enter seat number to reserve (e.g., A1): ").toUpperCase();
+                String seatNumber = InputValidator.getValidSeatNumber(scanner, "Enter seat number to reserve (e.g., A1): ").toUpperCase();
 
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;
