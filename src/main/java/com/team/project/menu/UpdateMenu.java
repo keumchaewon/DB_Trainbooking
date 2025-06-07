@@ -123,7 +123,7 @@ public class UpdateMenu {
                                     "JOIN route ro ON sch.route_id = ro.route_id " +
                                     "WHERE r.user_id = ?"
                     );
-                    PreparedStatement getSeatId = conn.prepareStatement("SELECT seat_id FROM seat WHERE seat_number = ? AND schedule_id = ?");
+                    PreparedStatement getSeatId = conn.prepareStatement("SELECT seat_id, is_reserved FROM seat WHERE seat_number = ? AND schedule_id = ?");
                     PreparedStatement freeOldSeat = conn.prepareStatement(
                             "UPDATE seat SET is_reserved = 0 WHERE seat_id = (SELECT seat_id FROM reservation WHERE reservation_id = ?)"
                     );
@@ -220,19 +220,29 @@ public class UpdateMenu {
                     }
                     System.out.println();
                 }
-                String newSeatNumber = InputValidator.getValidSeatNumber(sc, "\nEnter new Seat Number (e.g., 1A): ");
 
-                getSeatId.setString(1, newSeatNumber);
-                getSeatId.setInt(2, scheduleId);
-                ResultSet newSeatRs = getSeatId.executeQuery();
+                int newSeatId = -1;
 
-                if (!newSeatRs.next()) {
-                    System.out.println("Seat not found.");
-                    conn.rollback();
-                    return;
+                while (true) {
+                    String newSeatNumber = InputValidator.getValidSeatNumber(sc, "\nEnter new Seat Number (e.g., 1A): ");
+                    getSeatId.setString(1, newSeatNumber);
+                    getSeatId.setInt(2, scheduleId);
+                    ResultSet newSeatRs = getSeatId.executeQuery();
+
+                    if (!newSeatRs.next()) {
+                        System.out.println("Seat not found. Please try again.");
+                        continue;
+                    }
+
+                    boolean isReserved = newSeatRs.getBoolean("is_reserved");
+                    if (isReserved) {
+                        System.out.println("That seat is already reserved. Please choose another one.");
+                        continue;
+                    }
+
+                    newSeatId = newSeatRs.getInt("seat_id");
+                    break;
                 }
-
-                int newSeatId = newSeatRs.getInt("seat_id");
 
                 freeOldSeat.setInt(1, resId);
                 freeOldSeat.executeUpdate();
