@@ -212,7 +212,7 @@ public class UpdateMenu {
                 }
 
 
-                System.out.println("\n🪑 전체 좌석 현황 (예약된 좌석은 -- 로 표시):");
+                System.out.println("\n ALL Seats Overview:");
                 for (String row : seatMap.keySet()) {
                     System.out.print(row + "row : ");
                     List<String> seats = seatMap.get(row);
@@ -229,7 +229,7 @@ public class UpdateMenu {
                     System.out.println();
                 }
 
-                System.out.print("\nEnter new Seat Number (e.g., A1): ");
+                System.out.print("\nEnter new Seat Number (e.g., 1A): ");
                 String newSeatNumber = sc.nextLine();
 
                 getSeatId.setString(1, newSeatNumber);
