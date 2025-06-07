@@ -121,33 +121,36 @@ public class SelectMenu {
     }
 
     public static void showUserReservations(Scanner scanner) {
-        System.out.print("Enter your user ID: ");
-        int userId = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine().trim();
+
+        System.out.print("Enter your email: ");
+        String email = scanner.nextLine().trim();
 
         String sql = """
-        SELECT u.name AS user_name, r.reservation_id, t.train_name, s.run_date, st.seat_number
+        SELECT u.name AS user_name, t.train_name, s.run_date, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
         JOIN Train t ON s.train_id = t.train_id
         JOIN Seat st ON r.seat_id = st.seat_id
-        WHERE r.user_id = ?
+        WHERE u.name = ? AND u.email = ?
     """;
 
         try (Connection conn = ConnectionManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, userId);
+            stmt.setString(1, name);
+            stmt.setString(2, email);
             ResultSet rs = stmt.executeQuery();
 
-            System.out.println("\n [Your Reservations]");
+            System.out.println("\n[Your Reservations]");
             boolean found = false;
             while (rs.next()) {
                 found = true;
-                System.out.printf(" - Name: %s | Train: %s | Date: %s | Seat: %s%n",
-                        rs.getString("user_name"),
+                System.out.printf(" - Train: %s | Date: %s | Seat: %s%n",
                         rs.getString("train_name"),
-                        rs.getDate("run_date"),
+                        rs.getDate("run_date").toString(),
                         rs.getString("seat_number"));
             }
 
@@ -160,6 +163,7 @@ public class SelectMenu {
             e.printStackTrace();
         }
     }
+
 
 
 
