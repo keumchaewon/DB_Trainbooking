@@ -174,7 +174,6 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
     public static void insertReservation(Scanner scanner) {
 
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -268,7 +267,6 @@ public class InsertMenu {
                 System.out.print("Enter seat number to reserve (e.g., 1A): ");
                 String seatNumber = scanner.nextLine().trim().toUpperCase();
 
-                //  seat_number 유효성 확인 및 seat_id 조회
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;
                 try (PreparedStatement checkSeatStmt = conn.prepareStatement(checkSeatSql)) {
@@ -335,4 +333,5 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
 }
