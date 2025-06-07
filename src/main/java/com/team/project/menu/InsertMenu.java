@@ -1,22 +1,16 @@
 package com.team.project.menu;
+
 import java.util.*;
 import java.sql.*;
-import java.util.Scanner;
 import com.team.project.ConnectionManager;
-import java.util.*;
 
 public class InsertMenu {
 
     public static void insertUser(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            System.out.print("Enter name:");
-            String name = scanner.nextLine();
-
-            System.out.print("Enter phone number:");
-            String phone = scanner.nextLine();
-
-            System.out.print("Enter email address:");
-            String email = scanner.nextLine();
+            String name = InputValidator.getNonEmptyString(scanner, "Enter name: ");
+            String phone = InputValidator.getNonEmptyString(scanner, "Enter phone number: ");
+            String email = InputValidator.getNonEmptyString(scanner, "Enter email address: ");
 
             String sql = "INSERT INTO User(name, phone, email) VALUES (?,?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -32,11 +26,8 @@ public class InsertMenu {
 
     public static void insertTrain(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            System.out.print("Enter train_name:");
-            String train_name = scanner.nextLine();
-
-            System.out.print("Enter train_type:");
-            String train_type = scanner.nextLine();
+            String train_name = InputValidator.getNonEmptyString(scanner, "Enter train name: ");
+            String train_type = InputValidator.getNonEmptyString(scanner, "Enter train type: ");
 
             String sql = "INSERT INTO Train(train_name, train_type) VALUES (?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -51,11 +42,8 @@ public class InsertMenu {
 
     public static void insertRoute(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            System.out.print("Enter start_station:");
-            String start_station = scanner.nextLine();
-
-            System.out.print("Enter end_station:");
-            String end_station = scanner.nextLine();
+            String start_station = InputValidator.getNonEmptyString(scanner, "Enter start station: ");
+            String end_station = InputValidator.getNonEmptyString(scanner, "Enter end station: ");
 
             String sql = "INSERT INTO Route(start_station, end_station) VALUES (?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -70,15 +58,12 @@ public class InsertMenu {
 
     public static void insertSchedule(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-
             System.out.println("\n[Available Trains]");
             String trainSql = "SELECT train_id, train_name FROM Train ORDER BY train_id";
             try (PreparedStatement stmt = conn.prepareStatement(trainSql);
                  ResultSet rs = stmt.executeQuery()) {
-
                 System.out.printf("%-5s | %-15s%n", "ID", "Train Name");
                 System.out.println("----------------------------");
-
                 while (rs.next()) {
                     System.out.printf("%-5d | %-15s%n",
                             rs.getInt("train_id"),
@@ -87,17 +72,14 @@ public class InsertMenu {
                 System.out.println();
             }
 
-            System.out.print("Enter train_id: ");
-            int train_id = Integer.parseInt(scanner.nextLine());
+            int train_id = InputValidator.getValidInt(scanner, "Enter train_id: ");
 
             System.out.println("\n[Available Routes]");
             String routeSql = "SELECT route_id, start_station, end_station FROM Route ORDER BY route_id";
             try (PreparedStatement stmt = conn.prepareStatement(routeSql);
                  ResultSet rs = stmt.executeQuery()) {
-
                 System.out.printf("%-5s | %-18s -> %-18s%n", "ID", "From", "To");
                 System.out.println("--------------------------------------------------------");
-
                 while (rs.next()) {
                     System.out.printf("%-5d | %-18s -> %-18s%n",
                             rs.getInt("route_id"),
@@ -107,14 +89,9 @@ public class InsertMenu {
                 System.out.println();
             }
 
-            System.out.print("Enter route_id:");
-            int route_id = Integer.parseInt(scanner.nextLine());
-
-            System.out.print("Enter run_date (yyyy-mm-dd):");
-            java.sql.Date run_date = java.sql.Date.valueOf(scanner.nextLine());
-
-            System.out.print("Enter departure_time (HH:mm:ss):");
-            java.sql.Time departure_time = java.sql.Time.valueOf(scanner.nextLine());
+            int route_id = InputValidator.getValidInt(scanner, "Enter route_id: ");
+            java.sql.Date run_date = InputValidator.getValidDate(scanner, "Enter run_date (yyyy-mm-dd): ");
+            java.sql.Time departure_time = InputValidator.getValidTime(scanner, "Enter departure_time (HH:mm:ss): ");
 
             String sql = "INSERT INTO Schedule(train_id, route_id, run_date, departure_time) VALUES (?,?,?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -131,17 +108,13 @@ public class InsertMenu {
 
     public static void insertSeat(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
-
             System.out.println("\n[Available Schedules]");
             String scheduleListSql = "SELECT schedule_id, train_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
-
             try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql);
                  ResultSet rs = stmt.executeQuery()) {
-
                 System.out.printf("%-5s | %-7s | %-12s | %-10s%n",
                         "ID", "TrainID", "Run Date", "Departure");
                 System.out.println("----------------------------------------------");
-
                 while (rs.next()) {
                     int id = rs.getInt("schedule_id");
                     int trainId = rs.getInt("train_id");
@@ -154,14 +127,9 @@ public class InsertMenu {
                 System.out.println();
             }
 
-            System.out.print("Enter schedule_id:");
-            int schedule_id = Integer.parseInt(scanner.nextLine());
-
-            System.out.print("Enter seat_number:");
-            String seat_number = scanner.nextLine();
-
-            System.out.print("Enter is_reserved:");
-            Boolean is_reserved = Boolean.parseBoolean(scanner.nextLine());
+            int schedule_id = InputValidator.getValidInt(scanner, "Enter schedule_id: ");
+            String seat_number = InputValidator.getNonEmptyString(scanner, "Enter seat_number: ");
+            Boolean is_reserved = InputValidator.getValidBoolean(scanner, "Enter is_reserved");
 
             String sql = "INSERT INTO Seat(schedule_id, seat_number, is_reserved) VALUES (?,?,?)";
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -174,11 +142,24 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-    public static void insertReservation(Scanner scanner) {
 
+    public static void insertReservation(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
+            String email = InputValidator.getNonEmptyString(scanner, "Enter email: ");
+            int userId = -1;
+            String checkUserSql = "SELECT user_id FROM User WHERE email = ?";
+            try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
+                checkUserStmt.setString(1, email);
+                ResultSet rs = checkUserStmt.executeQuery();
 
+                if (rs.next()) {
+                    userId = rs.getInt("user_id");
+                } else {
+                    System.out.println("No user found with the given email.");
+                    return;
+                }
+            }
             try {
                 String scheduleListSql = "SELECT schedule_id, train_id, route_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
                 try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
@@ -198,15 +179,11 @@ public class InsertMenu {
                         System.out.printf("%-5d | %-7d | %-7d | %-12s | %-10s%n",
                                 id, trainId, routeId, runDate.toString(), departure.toString());
                     }
-                    System.out.println(); // 빈 줄 추가
+                    System.out.println();
                 }
 
-                // 1. schedule_id 입력
-                System.out.print("Enter schedule ID: ");
-                int scheduleId = Integer.parseInt(scanner.nextLine());
+                int scheduleId = InputValidator.getValidInt(scanner, "Enter schedule ID: ");
 
-
-                //  schedule_id 유효성 확인
                 String checkScheduleSql = "SELECT COUNT(*) FROM Schedule WHERE schedule_id = ?";
                 try (PreparedStatement checkScheduleStmt = conn.prepareStatement(checkScheduleSql)) {
                     checkScheduleStmt.setInt(1, scheduleId);
@@ -217,23 +194,23 @@ public class InsertMenu {
                     }
                 }
 
-                // 2. 남은 좌석 보여주기 (그림 형식 + 줄바꿈)
                 System.out.println("\nAll Seats Overview");
                 String showAllSeatsSql = "SELECT seat_number, is_reserved FROM Seat WHERE schedule_id = ?";
 
-                Map<String, List<String>> seatMap = new TreeMap<>();  // A, B, C... 줄별
+                Map<String, List<String>> seatMap = new TreeMap<>();
+                Map<String, Boolean> seatReservedMap = new HashMap<>();
+
                 try (PreparedStatement stmt = conn.prepareStatement(showAllSeatsSql)) {
                     stmt.setInt(1, scheduleId);
                     ResultSet rs = stmt.executeQuery();
 
                     boolean hasSeat = false;
-                    Map<String, Boolean> seatReservedMap = new HashMap<>(); // seat_number → 예약 여부
 
                     while (rs.next()) {
                         hasSeat = true;
                         String seatNumber = rs.getString("seat_number");
                         boolean reserved = rs.getBoolean("is_reserved");
-                        String row = seatNumber.replaceAll("[^A-Z]", "");  // 예: A, B 등
+                        String row = seatNumber.replaceAll("[^A-Z]", "");
 
                         seatMap.computeIfAbsent(row, k -> new ArrayList<>()).add(seatNumber);
                         seatReservedMap.put(seatNumber, reserved);
@@ -245,10 +222,9 @@ public class InsertMenu {
                     }
 
                     for (String row : seatMap.keySet()) {
-                        System.out.print(row + "row : ");
+                        System.out.print(row + " row: ");
                         List<String> seats = seatMap.get(row);
 
-                        // 숫자 기준 정렬
                         seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
 
                         for (String sn : seats) {
@@ -260,12 +236,9 @@ public class InsertMenu {
                         }
                         System.out.println();
                     }
-                    System.out.println();
                 }
 
-                // 3. seat_number 입력
-                System.out.print("Enter seat number to reserve (e.g., 1A): ");
-                String seatNumber = scanner.nextLine().trim().toUpperCase();
+                String seatNumber = InputValidator.getNonEmptyString(scanner, "Enter seat number to reserve (e.g., A1): ").toUpperCase();
 
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;
@@ -275,7 +248,7 @@ public class InsertMenu {
                     ResultSet rs = checkSeatStmt.executeQuery();
 
                     if (!rs.next()) {
-                        System.out.println("The selected seat does not exist or is not part of the schedule.");
+                        System.out.println("The selected seat does not exist.");
                         return;
                     }
                     if (rs.getBoolean("is_reserved")) {
@@ -285,24 +258,6 @@ public class InsertMenu {
                     seatId = rs.getInt("seat_id");
                 }
 
-                // 4. user_id 입력
-                System.out.print("Enter user ID: ");
-                int userId = Integer.parseInt(scanner.nextLine());
-
-
-                //  user_id 유효성 확인
-                String checkUserSql = "SELECT COUNT(*) FROM User WHERE user_id = ?";
-                try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
-                    checkUserStmt.setInt(1, userId);
-                    ResultSet rs = checkUserStmt.executeQuery();
-
-                    if (rs.next() && rs.getInt(1) == 0) {
-                        System.out.println("No user found with the given ID.");
-                        return;
-                    }
-                }
-
-                // 5. 예약 등록
                 String insertSql = "INSERT INTO Reservation (user_id, schedule_id, seat_id) VALUES (?, ?, ?)";
                 try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
                     insertStmt.setInt(1, userId);
@@ -311,7 +266,6 @@ public class InsertMenu {
                     insertStmt.executeUpdate();
                 }
 
-                // 6. 좌석 상태 업데이트
                 String updateSql = "UPDATE Seat SET is_reserved = TRUE WHERE seat_id = ? AND schedule_id = ?";
                 try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                     updateStmt.setInt(1, seatId);
@@ -324,7 +278,7 @@ public class InsertMenu {
 
             } catch (SQLException e) {
                 conn.rollback();
-                System.out.println(" An error occurred while processing the reservation.");
+                System.out.println("An error occurred while processing the reservation.");
                 e.printStackTrace();
             }
 
@@ -333,5 +287,4 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
-
 }
