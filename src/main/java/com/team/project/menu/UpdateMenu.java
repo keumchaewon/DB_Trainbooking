@@ -123,7 +123,7 @@ public class UpdateMenu {
                                     "JOIN route ro ON sch.route_id = ro.route_id " +
                                     "WHERE r.user_id = ?"
                     );
-                    PreparedStatement getSeatId = conn.prepareStatement("SELECT seat_id FROM seat WHERE seat_number = ? AND schedule_id = ?");
+                    PreparedStatement getSeatId = conn.prepareStatement("SELECT seat_id, is_reserved FROM seat WHERE seat_number = ? AND schedule_id = ?");
                     PreparedStatement freeOldSeat = conn.prepareStatement(
                             "UPDATE seat SET is_reserved = 0 WHERE seat_id = (SELECT seat_id FROM reservation WHERE reservation_id = ?)"
                     );
@@ -220,13 +220,11 @@ public class UpdateMenu {
                     }
                     System.out.println();
                 }
-                // [수정] 예약된 좌석을 선택할 경우 다시 입력받도록 루프 처리
+
                 int newSeatId = -1;
-                String newSeatNumber = null;
 
                 while (true) {
-                    newSeatNumber = InputValidator.getValidSeatNumber(sc, "\nEnter new Seat Number (e.g., 1A): ");
-
+                    String newSeatNumber = InputValidator.getValidSeatNumber(sc, "\nEnter new Seat Number (e.g., 1A): ");
                     getSeatId.setString(1, newSeatNumber);
                     getSeatId.setInt(2, scheduleId);
                     ResultSet newSeatRs = getSeatId.executeQuery();
@@ -236,7 +234,16 @@ public class UpdateMenu {
                         continue;
                     }
 
+
+                    boolean isReserved = newSeatRs.getBoolean("is_reserved");
+                    if (isReserved) {
+                        System.out.println("That seat is already reserved. Please choose another one.");
+                        continue;
+                    }
+
                     newSeatId = newSeatRs.getInt("seat_id");
+                    break;
+                }
 
                     if (seatReservedMap.getOrDefault(newSeatNumber, false)) {
                         System.out.println("That seat is already reserved. Please choose another one.");
