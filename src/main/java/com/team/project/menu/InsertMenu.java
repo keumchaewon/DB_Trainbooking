@@ -11,7 +11,6 @@ public class InsertMenu {
             String name = InputValidator.getNonEmptyString(scanner, "Enter name: ");
             String phone = InputValidator.getNonEmptyString(scanner, "Enter phone number: ");
             String email = InputValidator.getNonEmptyString(scanner, "Enter email address: ");
-
             // [수정] 이메일/전화번호 중복 검사
             String checkSql = "SELECT COUNT(*) FROM User WHERE email = ? OR phone = ?";
             try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
@@ -83,7 +82,6 @@ public class InsertMenu {
                 }
                 System.out.println();
             }
-
             // [수정] 존재하는 train_id 입력될 때까지 반복
             int train_id;
             while (true) {
@@ -111,7 +109,6 @@ public class InsertMenu {
                 }
                 System.out.println();
             }
-
             // [수정] 존재하는 route_id 입력될 때까지 반복
             int route_id;
             while (true) {
@@ -124,7 +121,6 @@ public class InsertMenu {
                 }
                 System.out.println("Invalid route_id. Please enter an existing route ID.");
             }
-
             java.sql.Date run_date = InputValidator.getValidDate(scanner, "Enter run_date (yyyy-mm-dd): ");
             java.sql.Time departure_time = InputValidator.getValidTime(scanner, "Enter departure_time (HH:mm:ss): ");
 
@@ -182,7 +178,6 @@ public class InsertMenu {
                 ResultSet rs = seatStmt.executeQuery();
 
                 Map<Integer, List<String>> rowMap = new TreeMap<>();  // row번호 → [A, B, C]
-
                 while (rs.next()) {
                     String seat = rs.getString("seat_number").toUpperCase();
                     String rowStr = seat.replaceAll("[^0-9]", "");   // 숫자 부분 (ex. "10")
