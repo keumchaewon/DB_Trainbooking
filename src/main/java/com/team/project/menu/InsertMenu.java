@@ -267,26 +267,44 @@ public class InsertMenu {
             }
 
             try {
-                String scheduleListSql = "SELECT schedule_id, train_id, route_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
+                String scheduleListSql = """
+                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+                FROM Schedule s
+                JOIN Route r ON s.route_id = r.route_id
+                JOIN Train t ON s.train_id = t.train_id
+                ORDER BY s.schedule_id
+                """;
+
                 try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
                     ResultSet rs = stmt.executeQuery();
 
                     System.out.println("Train Schedule Overview:");
-                    System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s%n",
-                            "ID", "TrainID", "RouteID", "Run Date", "Departure");
-                    System.out.println("------------------------------------------------------");
+                    System.out.printf("%-5s | %-10s | %-12s | %-12s | %-12s | %-10s%n",
+                            "ID", "Train", "From", "To", "Run Date", "Time");
+                    System.out.println("------------------------------------------------------------------");
+
                     while (rs.next()) {
                         int id = rs.getInt("schedule_id");
-                        int trainId = rs.getInt("train_id");
-                        int routeId = rs.getInt("route_id");
-                        java.sql.Date runDate = rs.getDate("run_date");
-                        Time departure = rs.getTime("departure_time");
 
-                        System.out.printf("%-5d | %-7d | %-7d | %-12s | %-10s%n",
-                                id, trainId, routeId, runDate.toString(), departure.toString());
+                        String trainName = rs.getString("train_name");
+                        String startStation = rs.getString("start_station");
+                        String endStation = rs.getString("end_station");
+                        String runDate = rs.getDate("run_date").toString();
+                        String departure = rs.getTime("departure_time").toString();
+
+                        // 너무 긴 항목 잘라줌 (최대 12자)
+                        trainName = (trainName.length() > 12) ? trainName.substring(0, 11) + "…" : trainName;
+                        startStation = (startStation.length() > 12) ? startStation.substring(0, 11) + "…" : startStation;
+                        endStation = (endStation.length() > 12) ? endStation.substring(0, 11) + "…" : endStation;
+
+                        System.out.printf("%-5d | %-10s | %-12s | %-12s | %-12s | %-10s%n",
+                                id, trainName, startStation, endStation, runDate, departure);
                     }
+
                     System.out.println();
                 }
+
+
 
                 int scheduleId = InputValidator.getValidInt(scanner, "Enter schedule ID: ");
 
