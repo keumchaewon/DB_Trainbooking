@@ -34,7 +34,7 @@ public class UpdateMenu {
         try (PreparedStatement findStmt = conn.prepareStatement(findSql)) {
             findStmt.setString(1, name);
             findStmt.setString(2, email);
-          
+
             ResultSet rs = findStmt.executeQuery();
 
             if (!rs.next()) {
@@ -234,7 +234,6 @@ public class UpdateMenu {
                         continue;
                     }
 
-
                     boolean isReserved = newSeatRs.getBoolean("is_reserved");
                     if (isReserved) {
                         System.out.println("That seat is already reserved. Please choose another one.");
@@ -245,12 +244,6 @@ public class UpdateMenu {
                     break;
                 }
 
-                    if (seatReservedMap.getOrDefault(newSeatNumber, false)) {
-                        System.out.println("That seat is already reserved. Please choose another one.");
-                        continue;
-                    }
-                    break;
-                }
                 freeOldSeat.setInt(1, resId);
                 freeOldSeat.executeUpdate();
 
