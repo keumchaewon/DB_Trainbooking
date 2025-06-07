@@ -199,42 +199,51 @@ public class SelectMenu {
     public static void showRemainingSeatsMenu(Scanner scanner) {
         while (true) {
             // 1. Show all available schedules with remaining seats
-            String scheduleListSql =
-                    "SELECT s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time, " +
-                            "       COUNT(seat_id) AS remaining_seats " +
-                            "FROM Schedule s " +
-                            "LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE " +
-                            "GROUP BY s.schedule_id, s.train_id, s.route_id, s.run_date, s.departure_time " +
-                            "ORDER BY s.schedule_id";
+            String scheduleListSql = """
+    SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
+           s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
+    FROM Schedule s
+    JOIN Train t ON s.train_id = t.train_id
+    JOIN Route r ON s.route_id = r.route_id
+    LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
+    GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+    ORDER BY s.schedule_id
+""";
 
             try (
                     Connection conn = ConnectionManager.getConnection();
                     PreparedStatement stmt = conn.prepareStatement(scheduleListSql);
                     ResultSet rs = stmt.executeQuery()
             ) {
-                // ✅ 여기에 모든 출력 로직 넣기
-                System.out.println(" Current Schedule List:");
-                System.out.printf("%-5s | %-8s | %-8s | %-12s | %-10s | %-15s%n",
-                        "ID", "Train ID", "Route ID", "Run Date", "Departure", "Available Seats");
-                System.out.println("-------------------------------------------------------------------------------");
+                System.out.println("Current Schedule List:");
+                System.out.printf("%-5s | %-12s | %-12s | %-12s | %-12s | %-10s | %-15s%n",
+                        "ID", "Train", "From", "To", "Run Date", "Time", "Available Seats");
+                System.out.println("--------------------------------------------------------------------------------------------");
 
                 while (rs.next()) {
                     int id = rs.getInt("schedule_id");
-                    int trainId = rs.getInt("train_id");
-                    int routeId = rs.getInt("route_id");
-                    java.sql.Date runDate = rs.getDate("run_date");
-                    Time departure = rs.getTime("departure_time");
+                    String trainName = rs.getString("train_name");
+                    String from = rs.getString("start_station");
+                    String to = rs.getString("end_station");
+                    String runDate = rs.getDate("run_date").toString();
+                    String time = rs.getTime("departure_time").toString();
                     int remaining = rs.getInt("remaining_seats");
 
-                    System.out.printf("%-5d | %-8d | %-8d | %-12s | %-10s | %-15d%n",
-                            id, trainId, routeId, runDate.toString(), departure.toString(), remaining);
-                }
-                System.out.println();
+                    // 길이 제한 (최대 12자, 너무 길면 ...)
+                    trainName = (trainName.length() > 12) ? trainName.substring(0, 11) + "…" : trainName;
+                    from = (from.length() > 12) ? from.substring(0, 11) + "…" : from;
+                    to = (to.length() > 12) ? to.substring(0, 11) + "…" : to;
 
+                    System.out.printf("%-5d | %-12s | %-12s | %-12s | %-12s | %-10s | %-15d%n",
+                            id, trainName, from, to, runDate, time, remaining);
+                }
+
+                System.out.println();
             } catch (SQLException e) {
                 System.out.println("Failed to load schedule list.");
                 e.printStackTrace();
             }
+
 
 
 
