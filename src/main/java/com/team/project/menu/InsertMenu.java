@@ -344,7 +344,7 @@ public class InsertMenu {
                     }
                 }
 
-                String seatNumber = InputValidator.getValidSeatNumber(scanner, "Enter seat number to reserve (e.g., A1): ").toUpperCase();
+                String seatNumber = InputValidator.getValidSeatNumber(scanner, "Enter seat number to reserve (e.g., 1A): ").toUpperCase();
 
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;

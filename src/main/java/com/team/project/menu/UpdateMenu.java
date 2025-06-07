@@ -206,7 +206,7 @@ public class UpdateMenu {
 
                 System.out.println("\nAll Seats Overview");
                 for (String row : seatMap.keySet()) {
-                    System.out.print(row + "row : ");
+                    System.out.print(row + " row : ");
                     List<String> seats = seatMap.get(row);
 
                     seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
