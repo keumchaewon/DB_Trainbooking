@@ -81,7 +81,7 @@ public class SelectMenu {
         try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
             ResultSet rs = stmt.executeQuery();
 
-            System.out.println("📅 현재 등록된 스케줄 목록:");
+            System.out.println("List of Available Train Schedules:");
             System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s | %-5s%n",
                     "ID", "TrainID", "RouteID", "Run Date", "Departure", "잔여좌석");
             System.out.println("------------------------------------------------------------------");
@@ -214,15 +214,15 @@ public class SelectMenu {
         while (true) {
             // 1. Show all available schedules with remaining seats
             String scheduleListSql = """
-    SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
-           s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
-    FROM Schedule s
-    JOIN Train t ON s.train_id = t.train_id
-    JOIN Route r ON s.route_id = r.route_id
-    LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
-    GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-    ORDER BY s.schedule_id
-""";
+            SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
+                s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
+            FROM Schedule s
+            JOIN Train t ON s.train_id = t.train_id
+            JOIN Route r ON s.route_id = r.route_id
+            LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
+            GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+            ORDER BY s.schedule_id
+            """;
 
             try (
                     Connection conn = ConnectionManager.getConnection();
@@ -346,6 +346,154 @@ public class SelectMenu {
         }
     }
 
+    public static void viewReservedSeatInfo(Scanner scanner) {
+        // 1. 스케줄 전체 출력
+        String scheduleSql = """
+        SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+        FROM Schedule s
+        JOIN Train t ON s.train_id = t.train_id
+        JOIN Route r ON s.route_id = r.route_id
+        ORDER BY s.schedule_id
+    """;
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(scheduleSql);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            System.out.println("\n[Train Schedules]");
+            System.out.printf("%-5s | %-10s | %-20s | %-20s | %-12s | %-10s%n",
+                    "ID", "Train", "From", "To", "Run Date", "Time");
+            System.out.println("-----------------------------------------------------------------------");
+
+            while (rs.next()) {
+                int id = rs.getInt("schedule_id");
+                String trainName = rs.getString("train_name");
+                String from = rs.getString("start_station");
+                String to = rs.getString("end_station");
+                String runDate = rs.getDate("run_date").toString();
+                String time = rs.getTime("departure_time").toString();
+
+                System.out.printf("%-5d | %-10s | %-20s | %-20s | %-12s | %-10s%n",
+                        id, trainName, from, to, runDate, time);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Failed to load schedules.");
+            e.printStackTrace();
+            return;
+        }
+
+        // 2. 스케줄 ID 입력 → 예약된 좌석만 보여줌
+        System.out.print("\nEnter a schedule ID to view reserved seats: ");
+        int scheduleId = Integer.parseInt(scanner.nextLine());
+
+        // Step 2: 예약된 좌석 가져오기
+        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = TRUE";
+        Map<String, List<String>> reservedSeatMap = new TreeMap<>();
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(reservedSeatSql)
+        ) {
+            stmt.setInt(1, scheduleId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String seatNumber = rs.getString("seat_number");
+                String row = seatNumber.replaceAll("[^A-Z]", "");
+                reservedSeatMap.computeIfAbsent(row, k -> new ArrayList<>()).add(seatNumber);
+            }
+
+            if (reservedSeatMap.isEmpty()) {
+                System.out.println("No reservations found for this schedule.");
+                return;
+            }
+
+            // 정렬 및 출력
+            System.out.printf("\n[Reserved Seats for Schedule ID %d]\n", scheduleId);
+            for (String row : reservedSeatMap.keySet()) {
+                List<String> seats = reservedSeatMap.get(row);
+                seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
+
+                System.out.print(row + " row: ");
+                for (String seat : seats) {
+                    System.out.print("[" + seat + "] ");
+                }
+                System.out.println();
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Failed to load reserved seats.");
+            e.printStackTrace();
+            return;
+        }
+
+
+
+        // 3. 좌석 번호 입력 → 예약 정보 출력
+        System.out.print("\n\nEnter seat number to view reservation info: ");
+        String seatInput = scanner.nextLine().trim().toUpperCase();
+
+// Step 1: seat_id 가져오기
+        String seatIdSql = "SELECT seat_id FROM Seat WHERE schedule_id = ? AND seat_number = ?";
+        int seatId = -1;
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement seatStmt = conn.prepareStatement(seatIdSql)
+        ) {
+            seatStmt.setInt(1, scheduleId);
+            seatStmt.setString(2, seatInput);
+            ResultSet seatRs = seatStmt.executeQuery();
+
+            if (seatRs.next()) {
+                seatId = seatRs.getInt("seat_id");
+            } else {
+                System.out.println("Invalid seat number for this schedule.");
+                return;
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to retrieve seat ID.");
+            e.printStackTrace();
+            return;
+        }
+
+// Step 2: 예약 정보 조회
+        String reservationDetailSql = """
+    SELECT u.name AS user_name, u.email, s.run_date, t.train_name, st.seat_number
+    FROM Reservation r
+    JOIN User u ON r.user_id = u.user_id
+    JOIN Schedule s ON r.schedule_id = s.schedule_id
+    JOIN Train t ON s.train_id = t.train_id
+    JOIN Seat st ON r.seat_id = st.seat_id
+    WHERE r.schedule_id = ? AND r.seat_id = ?
+""";
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(reservationDetailSql)
+        ) {
+            stmt.setInt(1, scheduleId);
+            stmt.setInt(2, seatId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("\n[Reservation Details]");
+                System.out.println("User: " + rs.getString("user_name"));
+                System.out.println("Email: " + rs.getString("email"));
+                System.out.println("Train: " + rs.getString("train_name"));
+                System.out.println("Run Date: " + rs.getDate("run_date"));
+                System.out.println("Seat: " + rs.getString("seat_number"));
+            } else {
+                System.out.println("No reservation found for this seat.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Failed to retrieve reservation information.");
+            e.printStackTrace();
+        }
+
+    }
 
 
 
