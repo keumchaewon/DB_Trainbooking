@@ -2,6 +2,10 @@ package com.team.project.menu;
 
 import java.sql.Date;
 import java.sql.Time;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class InputValidator {
@@ -22,8 +26,7 @@ public class InputValidator {
         while (true) {
             try {
                 System.out.print(prompt);
-                String input = scanner.nextLine().trim();
-                return Integer.parseInt(input);
+                return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.println("Invalid number. Please enter a valid integer.");
             }
@@ -32,22 +35,26 @@ public class InputValidator {
 
     public static Date getValidDate(Scanner scanner, String prompt) {
         while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
             try {
-                System.out.print(prompt);
-                return Date.valueOf(scanner.nextLine().trim());
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid date format. Please enter in yyyy-mm-dd format.");
+                LocalDate date = LocalDate.parse(input);
+                return Date.valueOf(date);
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format or value. Please enter in yyyy-mm-dd format.");
             }
         }
     }
 
     public static Time getValidTime(Scanner scanner, String prompt) {
         while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
             try {
-                System.out.print(prompt);
-                return Time.valueOf(scanner.nextLine().trim());
-            } catch (IllegalArgumentException e) {
-                System.out.println("Invalid time format. Please enter in HH:mm:ss format.");
+                LocalTime time = LocalTime.parse(input, DateTimeFormatter.ofPattern("H:mm:ss"));
+                return Time.valueOf(time);
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid time. Format must be HH:mm:ss with valid range (00–24:00:00).");
             }
         }
     }
@@ -60,6 +67,40 @@ public class InputValidator {
                 return Boolean.parseBoolean(input);
             }
             System.out.println("Please enter either 'true' or 'false'.");
+        }
+    }
+
+    public static String getValidTrainName(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim().toUpperCase();
+            if (input.matches("KTX-\\d{3}")) {
+                return input;
+            }
+            System.out.println("Invalid format. Train name must be in the format 'KTX-XXX' (e.g., KTX-100).");
+        }
+    }
+
+    public static String getValidTrainType(Scanner scanner, String prompt) {
+        String[] validTypes = {"급행", "고속", "완행"};
+        while (true) {
+            System.out.print(prompt + " (급행/고속/완행): ");
+            String input = scanner.nextLine().trim();
+            for (String type : validTypes) {
+                if (input.equals(type)) return input;
+            }
+            System.out.println("Invalid train type. Please enter '급행', '고속', or '완행'.");
+        }
+    }
+
+    public static String getValidSeatNumber(Scanner scanner, String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim().toUpperCase();
+            if (input.matches("\\d+[A-Z]")) {
+                return input;
+            }
+            System.out.println("Invalid seat number. Format should be like '1A', '10B', etc.");
         }
     }
 }
