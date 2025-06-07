@@ -247,20 +247,25 @@ public class InsertMenu {
     public static void insertReservation(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             conn.setAutoCommit(false);
+
+            String name = InputValidator.getNonEmptyString(scanner, "Enter name: ");
             String email = InputValidator.getNonEmptyString(scanner, "Enter email: ");
             int userId = -1;
-            String checkUserSql = "SELECT user_id FROM User WHERE email = ?";
+
+            String checkUserSql = "SELECT user_id FROM User WHERE name = ? AND email = ?";
             try (PreparedStatement checkUserStmt = conn.prepareStatement(checkUserSql)) {
-                checkUserStmt.setString(1, email);
+                checkUserStmt.setString(1, name);
+                checkUserStmt.setString(2, email);
                 ResultSet rs = checkUserStmt.executeQuery();
 
                 if (rs.next()) {
                     userId = rs.getInt("user_id");
                 } else {
-                    System.out.println("No user found with the given email.");
+                    System.out.println("No user found with the given name and email.");
                     return;
                 }
             }
+
             try {
                 String scheduleListSql = "SELECT schedule_id, train_id, route_id, run_date, departure_time FROM Schedule ORDER BY schedule_id";
                 try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
@@ -290,7 +295,7 @@ public class InsertMenu {
                     checkScheduleStmt.setInt(1, scheduleId);
                     ResultSet rs = checkScheduleStmt.executeQuery();
                     if (rs.next() && rs.getInt(1) == 0) {
-                        System.out.println("No schedule found with the given ID");
+                        System.out.println("No schedule found with the given ID.");
                         return;
                     }
                 }
@@ -339,7 +344,7 @@ public class InsertMenu {
                     }
                 }
 
-                String seatNumber = InputValidator.getValidSeatNumber(scanner, "Enter seat number to reserve (e.g., 1A): ").toUpperCase();
+                String seatNumber = InputValidator.getValidSeatNumber(scanner, "Enter seat number to reserve (e.g., A1): ").toUpperCase();
 
                 String checkSeatSql = "SELECT is_reserved, seat_id FROM Seat WHERE seat_number = ? AND schedule_id = ?";
                 int seatId = -1;
@@ -388,4 +393,5 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
 }
