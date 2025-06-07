@@ -145,17 +145,10 @@ public class UpdateMenu {
                     System.out.println("User not found.");
                     return;
                 }
-
-
                 int userId = userRs.getInt("user_id");
-
-
                 findReservations.setInt(1, userId);
                 ResultSet resRs = findReservations.executeQuery();
-
                 Map<Integer, Integer> reservationToScheduleMap = new HashMap<>();
-
-
                 System.out.println("\n[Your Reservations]");
                 int count = 0;
                 while (resRs.next()) {
@@ -211,8 +204,7 @@ public class UpdateMenu {
                     return;
                 }
 
-
-                System.out.println("\n🪑 전체 좌석 현황 (예약된 좌석은 -- 로 표시):");
+                System.out.println("\nAll Seats Overview");
                 for (String row : seatMap.keySet()) {
                     System.out.print(row + "row : ");
                     List<String> seats = seatMap.get(row);
@@ -228,9 +220,7 @@ public class UpdateMenu {
                     }
                     System.out.println();
                 }
-
-                System.out.print("\nEnter new Seat Number (e.g., A1): ");
-                String newSeatNumber = sc.nextLine();
+                String newSeatNumber = InputValidator.getValidSeatNumber(sc, "\nEnter new Seat Number (e.g., 1A): ");
 
                 getSeatId.setString(1, newSeatNumber);
                 getSeatId.setInt(2, scheduleId);
