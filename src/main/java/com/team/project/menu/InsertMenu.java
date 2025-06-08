@@ -70,18 +70,24 @@ public class InsertMenu {
     public static void insertSchedule(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.println("\n[Available Trains]");
-            String trainSql = "SELECT train_id, train_name FROM Train ORDER BY train_id";
+            String trainSql = "SELECT train_id, train_name, train_type FROM Train ORDER BY train_id";
             try (PreparedStatement stmt = conn.prepareStatement(trainSql);
                  ResultSet rs = stmt.executeQuery()) {
-                System.out.printf("%-5s | %-15s%n", "ID", "Train Name");
-                System.out.println("----------------------------");
+                System.out.printf("%-5s | %-10s | %-10s%n", "ID", "Train Name", "Type");
+                System.out.println("----------------------------------------");
                 while (rs.next()) {
-                    System.out.printf("%-5d | %-15s%n",
-                            rs.getInt("train_id"),
-                            rs.getString("train_name"));
+                    int id = rs.getInt("train_id");
+                    String name = rs.getString("train_name");
+                    String type = rs.getString("train_type");
+
+                    // 길이 제한 처리 (15자 이상은 자름)
+                    type = (type.length() > 10) ? type.substring(0, 9) + "…" : type;
+
+                    System.out.printf("%-5d | %-10s | %-10s%n", id, name, type);
                 }
                 System.out.println();
             }
+
             // [수정] 존재하는 train_id 입력될 때까지 반복
             int train_id;
             while (true) {
@@ -136,6 +142,7 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertSeat(Scanner sc) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.println("\n[Available Schedules]");
