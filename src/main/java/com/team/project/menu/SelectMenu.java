@@ -114,25 +114,40 @@ public class SelectMenu {
 
     private static void showAllReservations(Connection conn) throws SQLException {
         String sql = """
-        SELECT u.name AS user_name, r.reservation_id, t.train_name, s.run_date, st.seat_number
+        SELECT u.name AS user_name, r.reservation_id, t.train_name, t.train_type, 
+               s.run_date, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
         JOIN Train t ON s.train_id = t.train_id
         JOIN Seat st ON r.seat_id = st.seat_id
-        """;
+    """;
+
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+
             System.out.println("[Reservation list]");
             while (rs.next()) {
-                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
-                        rs.getString("user_name"),
-                        rs.getString("train_name"),
-                        rs.getDate("run_date"),
-                        rs.getString("seat_number"));
+                String userName = rs.getString("user_name");
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+                String runDate = rs.getDate("run_date").toString();
+                String seatNumber = rs.getString("seat_number");
+
+                // express면 파란색 처리
+                String colorStart = "";
+                String colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
+                System.out.printf("name: %-10s | train: %-12s | type: %s%-10s%s | date: %s | seat: %s%n",
+                        userName, trainName, colorStart, trainType, colorEnd, runDate, seatNumber);
             }
         }
     }
+
 
     public static void showUserReservations(Scanner scanner) {
         System.out.print("Enter your name: ");
@@ -142,7 +157,7 @@ public class SelectMenu {
         String email = scanner.nextLine().trim();
 
         String sql = """
-        SELECT u.name AS user_name, t.train_name, s.run_date, st.seat_number
+        SELECT u.name AS user_name, t.train_name, t.train_type, s.run_date, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
@@ -160,12 +175,24 @@ public class SelectMenu {
 
             System.out.println("\n[Your Reservations]");
             boolean found = false;
+
             while (rs.next()) {
                 found = true;
-                System.out.printf(" - Train: %s | Date: %s | Seat: %s%n",
-                        rs.getString("train_name"),
-                        rs.getDate("run_date").toString(),
-                        rs.getString("seat_number"));
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+                String runDate = rs.getDate("run_date").toString();
+                String seatNumber = rs.getString("seat_number");
+
+                // express면 파란색 처리
+                String colorStart = "";
+                String colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
+                System.out.printf(" - Train: %-12s | Type: %s%-10s%s | Date: %s | Seat: %s%n",
+                        trainName, colorStart, trainType, colorEnd, runDate, seatNumber);
             }
 
             if (!found) {
@@ -177,6 +204,7 @@ public class SelectMenu {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -214,15 +242,15 @@ public class SelectMenu {
         while (true) {
             // 1. Show all available schedules with remaining seats
             String scheduleListSql = """
-            SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
-                s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
-            FROM Schedule s
-            JOIN Train t ON s.train_id = t.train_id
-            JOIN Route r ON s.route_id = r.route_id
-            LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
-            GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-            ORDER BY s.schedule_id
-            """;
+SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station,
+       s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
+FROM Schedule s
+JOIN Train t ON s.train_id = t.train_id
+JOIN Route r ON s.route_id = r.route_id
+LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
+GROUP BY s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+ORDER BY s.schedule_id
+""";
 
             try (
                     Connection conn = ConnectionManager.getConnection();
@@ -230,26 +258,35 @@ public class SelectMenu {
                     ResultSet rs = stmt.executeQuery()
             ) {
                 System.out.println("Current Schedule List:");
-                System.out.printf("%-5s | %-12s | %-12s | %-12s | %-12s | %-10s | %-15s%n",
-                        "ID", "Train", "From", "To", "Run Date", "Time", "Available Seats");
-                System.out.println("--------------------------------------------------------------------------------------------");
+                System.out.printf("%-5s | %-10s | %-10s | %-16s | %-16s | %-12s | %-10s | %-15s%n",
+                        "ID", "Train", "Type", "From", "To", "Run Date", "Time", "Available Seats");
+                System.out.println("-------------------------------------------------------------------------------------------------------------------");
 
                 while (rs.next()) {
                     int id = rs.getInt("schedule_id");
                     String trainName = rs.getString("train_name");
+                    String trainType = rs.getString("train_type");
                     String from = rs.getString("start_station");
                     String to = rs.getString("end_station");
                     String runDate = rs.getDate("run_date").toString();
                     String time = rs.getTime("departure_time").toString();
                     int remaining = rs.getInt("remaining_seats");
 
-                    // 길이 제한 (최대 12자, 너무 길면 ...)
-                    trainName = (trainName.length() > 12) ? trainName.substring(0, 11) + "…" : trainName;
-                    from = (from.length() > 12) ? from.substring(0, 11) + "…" : from;
-                    to = (to.length() > 12) ? to.substring(0, 11) + "…" : to;
+                    // 16자 초과시 자르기
+                    trainType = (trainType.length() > 10) ? trainType.substring(0, 9) + "…" : trainType;
+                    from = (from.length() > 16) ? from.substring(0, 15) + "…" : from;
+                    to = (to.length() > 16) ? to.substring(0, 15) + "…" : to;
 
-                    System.out.printf("%-5d | %-12s | %-12s | %-12s | %-12s | %-10s | %-15d%n",
-                            id, trainName, from, to, runDate, time, remaining);
+                    // express면 파란색 처리
+                    String colorStart = "";
+                    String colorEnd = "";
+                    if ("express".equalsIgnoreCase(trainType)) {
+                        colorStart = "\u001B[34m";  // 파란색
+                        colorEnd = "\u001B[0m";     // 리셋
+                    }
+
+                    System.out.printf("%-5d | %-10s | %s%-10s%s | %-16s | %-16s | %-12s | %-10s | %-15d%n",
+                            id, trainName, colorStart, trainType, colorEnd, from, to, runDate, time, remaining);
                 }
 
                 System.out.println();
@@ -257,6 +294,7 @@ public class SelectMenu {
                 System.out.println("Failed to load schedule list.");
                 e.printStackTrace();
             }
+
 
 
 
