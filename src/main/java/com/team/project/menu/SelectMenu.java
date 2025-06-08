@@ -445,7 +445,7 @@ ORDER BY s.schedule_id
             System.out.println("\n[Train Schedules]");
             System.out.printf("%-5s | %-10s | %-20s | %-20s | %-12s | %-10s%n",
                     "ID", "Train", "From", "To", "Run Date", "Time");
-            System.out.println("-------------------------------------------------------------------------------");
+            System.out.println("-------------------------------------------------------------------------------------------");
 
             while (rs.next()) {
                 int id = rs.getInt("schedule_id");
