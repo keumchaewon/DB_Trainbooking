@@ -7,20 +7,32 @@ import java.util.*;
 
 public class SelectMenu {
 
-    private static void showUsers(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM User";
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[User List]");
-            while (rs.next()) {
-                System.out.printf("ID: %d, name: %s, phone number: %s, email: %s%n",
-                        rs.getInt("user_id"),
-                        rs.getString("name"),
-                        rs.getString("phone"),
-                        rs.getString("email"));
+    public static void showUsers() {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            String sql = "SELECT * FROM User";
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                System.out.println("\n[ User List ]");
+                System.out.printf("%-3s | %-20s | %-25s | %-25s%n",
+                        "ID", "Name", "Phone", "Email");
+                System.out.println("----|----------------------|---------------------------|------------------------------");
+
+                while (rs.next()) {
+                    System.out.printf("%-3d | %-20s | %-25s | %-25s%n",
+                            rs.getInt("user_id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("email"));
+                }
+
             }
+        } catch (SQLException e) {
+            System.out.println("Failed to load user list.");
+            e.printStackTrace();
         }
     }
+
 
     public static void showReservations() {
         try (Connection conn = ConnectionManager.getConnection()) {

@@ -268,6 +268,7 @@ public class Main {
             System.out.println("\n[ View Menu ]");
             System.out.println("1. View Reservation Summary by Date");
             System.out.println("2. View Reserved Seat Details");
+            System.out.println("3. View All Users");
             System.out.println("0. Back");
             System.out.print("Select option: ");
 
@@ -288,6 +289,9 @@ public class Main {
                     break;
                 case 2:
                     SelectMenu.viewReservedSeatInfo(sc);
+                    break;
+                case 3:
+                    SelectMenu.showUsers();
                     break;
                 default:
                     System.out.println("Invalid option, please try again.");
