@@ -408,7 +408,7 @@ ORDER BY s.schedule_id
                     insertStmt.executeUpdate();
                 }
 
-                String updateSql = "UPDATE Seat SET is_reserved = TRUE WHERE seat_id = ? AND schedule_id = ?";
+                String updateSql = "UPDATE Seat SET is_reserved = 1 WHERE seat_id = ? AND schedule_id = ?";
                 try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                     updateStmt.setInt(1, seatId);
                     updateStmt.setInt(2, scheduleId);

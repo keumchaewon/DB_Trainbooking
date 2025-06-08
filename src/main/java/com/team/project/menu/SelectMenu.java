@@ -558,7 +558,7 @@ ORDER BY s.schedule_id
             }
         }
 
-        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = TRUE";
+        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = 1";
         Map<String, List<String>> reservedSeatMap = new TreeMap<>();
 
         try (
