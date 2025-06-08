@@ -191,14 +191,10 @@ public class Main {
     }
 
     private static void staffMenu(Scanner sc) {
-        while(true) {
+        while (true) {
             System.out.println("\n=== Staff Menu ===");
-            System.out.println("1. Register Train");
-            System.out.println("2. Register Route");
-            System.out.println("3. Register Schedule");
-            System.out.println("4. Register Seat");
-            System.out.println("5. View Reservation");
-            System.out.println("6. View Train Information");
+            System.out.println("1. Register Menu");
+            System.out.println("2. View Menu");
             System.out.println("0. Back to Main Menu");
             System.out.print("Select option: ");
 
@@ -216,6 +212,40 @@ public class Main {
                     System.out.println("Returning to Main Menu.");
                     return;
                 case 1:
+                    registerMenu(sc);
+                    break;
+                case 2:
+                    viewMenu(sc);
+                    break;
+                default:
+                    System.out.println("Invalid option, please try again.");
+            }
+        }
+    }
+
+    private static void registerMenu(Scanner sc) {
+        while (true) {
+            System.out.println("\n[ Register Menu ]");
+            System.out.println("1. Register Train");
+            System.out.println("2. Register Route");
+            System.out.println("3. Register Schedule");
+            System.out.println("4. Register Seat");
+            System.out.println("0. Back");
+            System.out.print("Select option: ");
+
+            String input = sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
+
+            switch (choice) {
+                case 0:
+                    return;
+                case 1:
                     InsertMenu.insertTrain(sc);
                     break;
                 case 2:
@@ -227,12 +257,43 @@ public class Main {
                 case 4:
                     InsertMenu.insertSeat(sc);
                     break;
-                case 5:
+                default:
+                    System.out.println("Invalid option, please try again.");
+            }
+        }
+    }
+
+    private static void viewMenu(Scanner sc) {
+        while (true) {
+            System.out.println("\n[ View Menu ]");
+            System.out.println("1. View Reservation Summary by Date");
+            System.out.println("2. View Reserved Seat Details");
+            System.out.println("0. Back");
+            System.out.print("Select option: ");
+
+            String input = sc.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
+
+            switch (choice) {
+                case 0:
+                    return;
+                case 1:
                     SelectMenu.showReservations();
+                    break;
+                case 2:
+                    SelectMenu.viewReservedSeatInfo(sc);
                     break;
                 default:
                     System.out.println("Invalid option, please try again.");
             }
         }
     }
+
 }
+

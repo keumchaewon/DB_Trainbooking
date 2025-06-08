@@ -31,19 +31,33 @@ public class SelectMenu {
     }
 
     private static void showReservations(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM UserReservations"; // View 사용
+        String sql = "SELECT * FROM UserReservations ORDER BY run_date ASC";
+
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+
             System.out.println("[Reservation List]");
+            System.out.printf("%-12s | %-10s | %-20s | %-10s%n", "Run Date", "Train", "Name", "Seat");
+            System.out.println("------------------------------------------------------------");
+
             while (rs.next()) {
-                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
-                        rs.getString("user_name"),
-                        rs.getString("train_name"),
-                        rs.getDate("run_date"),
-                        rs.getString("seat_number"));
+                String runDate = rs.getDate("run_date").toString();
+                String train = rs.getString("train_name");
+                String name = rs.getString("user_name");
+                String seat = rs.getString("seat_number");
+
+                // 문자열이 길면 줄이기
+                //name = (name.length() > 10) ? name.substring(0, 9) + "…" : name;
+                //train = (train.length() > 15) ? train.substring(0, 14) + "…" : train;
+
+                System.out.printf("%-12s | %-10s | %-20s | %-10s%n",
+                        runDate, train, name, seat);
             }
+
+            System.out.println();
         }
     }
+
 
 
     public static void showRemainingSeats() {
@@ -67,7 +81,7 @@ public class SelectMenu {
         try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
             ResultSet rs = stmt.executeQuery();
 
-            System.out.println("📅 현재 등록된 스케줄 목록:");
+            System.out.println("List of Available Train Schedules:");
             System.out.printf("%-5s | %-7s | %-7s | %-12s | %-10s | %-5s%n",
                     "ID", "TrainID", "RouteID", "Run Date", "Departure", "잔여좌석");
             System.out.println("------------------------------------------------------------------");
@@ -200,15 +214,15 @@ public class SelectMenu {
         while (true) {
             // 1. Show all available schedules with remaining seats
             String scheduleListSql = """
-    SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
-           s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
-    FROM Schedule s
-    JOIN Train t ON s.train_id = t.train_id
-    JOIN Route r ON s.route_id = r.route_id
-    LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
-    GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-    ORDER BY s.schedule_id
-""";
+            SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
+                s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
+            FROM Schedule s
+            JOIN Train t ON s.train_id = t.train_id
+            JOIN Route r ON s.route_id = r.route_id
+            LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
+            GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+            ORDER BY s.schedule_id
+            """;
 
             try (
                     Connection conn = ConnectionManager.getConnection();
@@ -329,6 +343,207 @@ public class SelectMenu {
                 }
             }
 
+        }
+    }
+
+    public static void viewReservedSeatInfo(Scanner scanner) {
+        // 1. 조회 방식 선택
+        System.out.println("\n[Search Mode]");
+        System.out.println("1. Search by Run Date");
+        System.out.println("2. Search by Train Name");
+        System.out.println("3. Search by Schedule ID");
+        System.out.print("Select search mode: ");
+
+        String searchMode = scanner.nextLine();
+        String scheduleSql = "";
+
+        switch (searchMode) {
+            case "1" -> {
+                String date;
+                while (true) {
+                    System.out.print("Enter run date (yyyy-mm-dd): ");
+                    date = scanner.nextLine().trim();
+                    if (date.matches("\\d{4}-\\d{2}-\\d{2}")) break;
+                    System.out.println("Invalid date format. Please enter yyyy-mm-dd.");
+                }
+                scheduleSql = """
+                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+                FROM Schedule s
+                JOIN Train t ON s.train_id = t.train_id
+                JOIN Route r ON s.route_id = r.route_id
+                WHERE s.run_date = '""" + date + "' ORDER BY s.schedule_id";
+            }
+            case "2" -> {
+                System.out.print("Enter train name (partial allowed): ");
+                String train = scanner.nextLine().trim();
+                scheduleSql = """
+                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+                FROM Schedule s
+                JOIN Train t ON s.train_id = t.train_id
+                JOIN Route r ON s.route_id = r.route_id
+                WHERE t.train_name LIKE '%""" + train + "%' ORDER BY s.schedule_id";
+            }
+            case "3" -> {
+                scheduleSql = """
+                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
+                FROM Schedule s
+                JOIN Train t ON s.train_id = t.train_id
+                JOIN Route r ON s.route_id = r.route_id
+                ORDER BY s.schedule_id""";
+            }
+            default -> {
+                System.out.println("Invalid input. Returning to menu.");
+                return;
+            }
+        }
+
+        List<Integer> validScheduleIds = new ArrayList<>();
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(scheduleSql);
+                ResultSet rs = stmt.executeQuery()
+        ) {
+            System.out.println("\n[Train Schedules]");
+            System.out.printf("%-5s | %-10s | %-20s | %-20s | %-12s | %-10s%n",
+                    "ID", "Train", "From", "To", "Run Date", "Time");
+            System.out.println("-------------------------------------------------------------------------------");
+
+            while (rs.next()) {
+                int id = rs.getInt("schedule_id");
+                validScheduleIds.add(id);
+                System.out.printf("%-5d | %-10s | %-20s | %-20s | %-12s | %-10s%n",
+                        id,
+                        rs.getString("train_name"),
+                        rs.getString("start_station"),
+                        rs.getString("end_station"),
+                        rs.getDate("run_date").toString(),
+                        rs.getTime("departure_time").toString());
+            }
+            if (validScheduleIds.isEmpty()) {
+                System.out.println("No matching schedules found.");
+                return;
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Failed to load schedules.");
+            e.printStackTrace();
+            return;
+        }
+
+        // 2. 스케줄 ID 입력 및 유효성 검사
+        int scheduleId;
+        while (true) {
+            System.out.print("\nEnter a schedule ID to view reserved seats: ");
+            String input = scanner.nextLine();
+            try {
+                scheduleId = Integer.parseInt(input);
+                if (!validScheduleIds.contains(scheduleId)) {
+                    System.out.println("Invalid schedule ID. Please try again.");
+                    continue;
+                }
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+            }
+        }
+
+        // 3. 예약된 좌석 조회 및 출력
+        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = TRUE";
+        Map<String, List<String>> reservedSeatMap = new TreeMap<>();
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(reservedSeatSql)
+        ) {
+            stmt.setInt(1, scheduleId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                String seatNumber = rs.getString("seat_number");
+                String row = seatNumber.replaceAll("[^A-Z]", "");
+                reservedSeatMap.computeIfAbsent(row, k -> new ArrayList<>()).add(seatNumber);
+            }
+
+            if (reservedSeatMap.isEmpty()) {
+                System.out.println("No reservations found for this schedule.");
+                return;
+            }
+
+            System.out.printf("\n[Reserved Seats for Schedule ID %d]\n", scheduleId);
+            for (String row : reservedSeatMap.keySet()) {
+                List<String> seats = reservedSeatMap.get(row);
+                seats.sort(Comparator.comparingInt(s -> Integer.parseInt(s.replaceAll("[^0-9]", ""))));
+                System.out.print(row + " row: ");
+                for (String seat : seats) {
+                    System.out.print("[" + seat + "] ");
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to load reserved seats.");
+            e.printStackTrace();
+            return;
+        }
+
+        // 4. 좌석 번호 입력 후 예약 정보 조회
+        System.out.print("\nEnter seat number to view reservation info: ");
+        String seatInput = scanner.nextLine().trim().toUpperCase();
+
+        String seatIdSql = "SELECT seat_id FROM Seat WHERE schedule_id = ? AND seat_number = ?";
+        int seatId = -1;
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement seatStmt = conn.prepareStatement(seatIdSql)
+        ) {
+            seatStmt.setInt(1, scheduleId);
+            seatStmt.setString(2, seatInput);
+            ResultSet seatRs = seatStmt.executeQuery();
+
+            if (seatRs.next()) {
+                seatId = seatRs.getInt("seat_id");
+            } else {
+                System.out.println("Invalid seat number for this schedule.");
+                return;
+            }
+        } catch (SQLException e) {
+            System.out.println("Failed to retrieve seat ID.");
+            e.printStackTrace();
+            return;
+        }
+
+        String reservationDetailSql = """
+        SELECT u.name AS user_name, u.email, s.run_date, t.train_name, st.seat_number
+        FROM Reservation r
+        JOIN User u ON r.user_id = u.user_id
+        JOIN Schedule s ON r.schedule_id = s.schedule_id
+        JOIN Train t ON s.train_id = t.train_id
+        JOIN Seat st ON r.seat_id = st.seat_id
+        WHERE r.schedule_id = ? AND r.seat_id = ?
+    """;
+
+        try (
+                Connection conn = ConnectionManager.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(reservationDetailSql)
+        ) {
+            stmt.setInt(1, scheduleId);
+            stmt.setInt(2, seatId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("\n[Reservation Details]");
+                System.out.println("User: " + rs.getString("user_name"));
+                System.out.println("Email: " + rs.getString("email"));
+                System.out.println("Train: " + rs.getString("train_name"));
+                System.out.println("Run Date: " + rs.getDate("run_date"));
+                System.out.println("Seat: " + rs.getString("seat_number"));
+            } else {
+                System.out.println("No reservation found for this seat.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Failed to retrieve reservation information.");
+            e.printStackTrace();
         }
     }
 
