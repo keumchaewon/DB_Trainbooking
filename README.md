@@ -101,7 +101,7 @@ Or in IntelliJ:
 Use the following command:
 
 ```bash
-java -jar TrainReservationSystem.jar
+java -jar TrainReservation.jar
 ```
 
 Make sure the `.jar` file name matches the actual file provided in your project.
