@@ -70,18 +70,24 @@ public class InsertMenu {
     public static void insertSchedule(Scanner scanner) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.println("\n[Available Trains]");
-            String trainSql = "SELECT train_id, train_name FROM Train ORDER BY train_id";
+            String trainSql = "SELECT train_id, train_name, train_type FROM Train ORDER BY train_id";
             try (PreparedStatement stmt = conn.prepareStatement(trainSql);
                  ResultSet rs = stmt.executeQuery()) {
-                System.out.printf("%-5s | %-15s%n", "ID", "Train Name");
-                System.out.println("----------------------------");
+                System.out.printf("%-5s | %-10s | %-10s%n", "ID", "Train Name", "Type");
+                System.out.println("----------------------------------------");
                 while (rs.next()) {
-                    System.out.printf("%-5d | %-15s%n",
-                            rs.getInt("train_id"),
-                            rs.getString("train_name"));
+                    int id = rs.getInt("train_id");
+                    String name = rs.getString("train_name");
+                    String type = rs.getString("train_type");
+
+                    // 길이 제한 처리 (15자 이상은 자름)
+                    type = (type.length() > 10) ? type.substring(0, 9) + "…" : type;
+
+                    System.out.printf("%-5d | %-10s | %-10s%n", id, name, type);
                 }
                 System.out.println();
             }
+
             // [수정] 존재하는 train_id 입력될 때까지 반복
             int train_id;
             while (true) {
@@ -136,6 +142,7 @@ public class InsertMenu {
             e.printStackTrace();
         }
     }
+
     public static void insertSeat(Scanner sc) {
         try (Connection conn = ConnectionManager.getConnection()) {
             System.out.println("\n[Available Schedules]");
@@ -266,43 +273,54 @@ public class InsertMenu {
                 }
             }
 
-            try {
-                String scheduleListSql = """
-                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-                FROM Schedule s
-                JOIN Route r ON s.route_id = r.route_id
-                JOIN Train t ON s.train_id = t.train_id
-                ORDER BY s.schedule_id
-                """;
+            try {String scheduleListSql = """
+SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+FROM Schedule s
+JOIN Route r ON s.route_id = r.route_id
+JOIN Train t ON s.train_id = t.train_id
+ORDER BY s.schedule_id
+""";
 
                 try (PreparedStatement stmt = conn.prepareStatement(scheduleListSql)) {
                     ResultSet rs = stmt.executeQuery();
 
                     System.out.println("Train Schedule Overview:");
-                    System.out.printf("%-5s | %-10s | %-12s | %-12s | %-12s | %-10s%n",
-                            "ID", "Train", "From", "To", "Run Date", "Time");
-                    System.out.println("------------------------------------------------------------------");
+                    System.out.printf("%-4s | %-10s | %-10s | %-16s | %-16s | %-12s | %-10s%n",
+                            "ID", "Train", "Type", "From", "To", "Run Date", "Time");
+                    System.out.println("--------------------------------------------------------------------------------------------");
 
                     while (rs.next()) {
                         int id = rs.getInt("schedule_id");
 
                         String trainName = rs.getString("train_name");
+                        String trainType = rs.getString("train_type");
                         String startStation = rs.getString("start_station");
                         String endStation = rs.getString("end_station");
                         String runDate = rs.getDate("run_date").toString();
                         String departure = rs.getTime("departure_time").toString();
 
-                        // 너무 긴 항목 잘라줌 (최대 12자)
-                        trainName = (trainName.length() > 12) ? trainName.substring(0, 11) + "…" : trainName;
-                        startStation = (startStation.length() > 12) ? startStation.substring(0, 11) + "…" : startStation;
-                        endStation = (endStation.length() > 12) ? endStation.substring(0, 11) + "…" : endStation;
+                        // 길이 제한
+                        trainName = (trainName.length() > 10) ? trainName.substring(0, 9) + "…" : trainName;
+                        trainType = (trainType.length() > 10) ? trainType.substring(0, 9) + "…" : trainType;
+                        startStation = (startStation.length() > 16) ? startStation.substring(0, 15) + "…" : startStation;
+                        endStation = (endStation.length() > 16) ? endStation.substring(0, 15) + "…" : endStation;
 
-                        System.out.printf("%-5d | %-10s | %-12s | %-12s | %-12s | %-10s%n",
-                                id, trainName, startStation, endStation, runDate, departure);
+                        // 색상 처리
+                        String colorStart = "";
+                        String colorEnd = "";
+                        if ("express".equalsIgnoreCase(trainType)) {
+                            colorStart = "\u001B[34m";  // 파란색
+                            colorEnd = "\u001B[0m";     // 리셋
+                        }
+
+                        System.out.printf("%-4d | %-10s | %s%-10s%s | %-16s | %-16s | %-1s | %-10s%n",
+                                id, trainName, colorStart, trainType, colorEnd, startStation, endStation, runDate, departure);
                     }
+
 
                     System.out.println();
                 }
+
 
 
 
@@ -390,7 +408,7 @@ public class InsertMenu {
                     insertStmt.executeUpdate();
                 }
 
-                String updateSql = "UPDATE Seat SET is_reserved = TRUE WHERE seat_id = ? AND schedule_id = ?";
+                String updateSql = "UPDATE Seat SET is_reserved = 1 WHERE seat_id = ? AND schedule_id = ?";
                 try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                     updateStmt.setInt(1, seatId);
                     updateStmt.setInt(2, scheduleId);

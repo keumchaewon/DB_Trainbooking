@@ -82,14 +82,14 @@ public class InputValidator {
     }
 
     public static String getValidTrainType(Scanner scanner, String prompt) {
-        String[] validTypes = {"급행", "고속", "완행"};
+        String[] validTypes = {"all stop", "express"};
         while (true) {
-            System.out.print(prompt + " (급행/고속/완행): ");
-            String input = scanner.nextLine().trim();
+            System.out.print(prompt + " (all stop/express): ");
+            String input = scanner.nextLine();
             for (String type : validTypes) {
                 if (input.equals(type)) return input;
             }
-            System.out.println("Invalid train type. Please enter '급행', '고속', or '완행'.");
+            System.out.println("Invalid train type. Please enter 'all stop' or 'express'.");
         }
     }
 

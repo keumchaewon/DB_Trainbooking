@@ -7,20 +7,32 @@ import java.util.*;
 
 public class SelectMenu {
 
-    private static void showUsers(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM User";
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            System.out.println("[User List]");
-            while (rs.next()) {
-                System.out.printf("ID: %d, name: %s, phone number: %s, email: %s%n",
-                        rs.getInt("user_id"),
-                        rs.getString("name"),
-                        rs.getString("phone"),
-                        rs.getString("email"));
+    public static void showUsers() {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            String sql = "SELECT * FROM User";
+            try (PreparedStatement stmt = conn.prepareStatement(sql);
+                 ResultSet rs = stmt.executeQuery()) {
+
+                System.out.println("\n[ User List ]");
+                System.out.printf("%-3s | %-20s | %-25s | %-25s%n",
+                        "ID", "Name", "Phone", "Email");
+                System.out.println("----|----------------------|---------------------------|------------------------------");
+
+                while (rs.next()) {
+                    System.out.printf("%-3d | %-20s | %-25s | %-25s%n",
+                            rs.getInt("user_id"),
+                            rs.getString("name"),
+                            rs.getString("phone"),
+                            rs.getString("email"));
+                }
+
             }
+        } catch (SQLException e) {
+            System.out.println("Failed to load user list.");
+            e.printStackTrace();
         }
     }
+
 
     public static void showReservations() {
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -31,32 +43,48 @@ public class SelectMenu {
     }
 
     private static void showReservations(Connection conn) throws SQLException {
-        String sql = "SELECT * FROM UserReservations ORDER BY run_date ASC";
+        String sql = """
+        SELECT u.name AS user_name, t.train_name, t.train_type, s.run_date, st.seat_number
+        FROM Reservation r
+        JOIN User u ON r.user_id = u.user_id
+        JOIN Schedule s ON r.schedule_id = s.schedule_id
+        JOIN Train t ON s.train_id = t.train_id
+        JOIN Seat st ON r.seat_id = st.seat_id
+        ORDER BY s.run_date ASC
+    """;
 
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             System.out.println("[Reservation List]");
-            System.out.printf("%-12s | %-10s | %-20s | %-10s%n", "Run Date", "Train", "Name", "Seat");
-            System.out.println("------------------------------------------------------------");
+            System.out.printf("%-12s | %-10s | %-10s | %-20s | %-10s%n",
+                    "Run Date", "Train", "Type", "Name", "Seat");
+            System.out.println("--------------------------------------------------------------------------");
 
             while (rs.next()) {
                 String runDate = rs.getDate("run_date").toString();
                 String train = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
                 String name = rs.getString("user_name");
                 String seat = rs.getString("seat_number");
 
-                // 문자열이 길면 줄이기
-                //name = (name.length() > 10) ? name.substring(0, 9) + "…" : name;
-                //train = (train.length() > 15) ? train.substring(0, 14) + "…" : train;
+                // 색상 처리 (express -> 파란색)
+                String colorStart = "";
+                String colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
 
-                System.out.printf("%-12s | %-10s | %-20s | %-10s%n",
-                        runDate, train, name, seat);
+                System.out.printf("%-12s | %-10s | %s%-10s%s | %-20s | %-10s%n",
+                        runDate, train, colorStart, trainType, colorEnd, name, seat);
             }
 
             System.out.println();
         }
     }
+
+
 
 
 
@@ -114,25 +142,40 @@ public class SelectMenu {
 
     private static void showAllReservations(Connection conn) throws SQLException {
         String sql = """
-        SELECT u.name AS user_name, r.reservation_id, t.train_name, s.run_date, st.seat_number
+        SELECT u.name AS user_name, r.reservation_id, t.train_name, t.train_type, 
+               s.run_date, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
         JOIN Train t ON s.train_id = t.train_id
         JOIN Seat st ON r.seat_id = st.seat_id
-        """;
+    """;
+
         try (PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+
             System.out.println("[Reservation list]");
             while (rs.next()) {
-                System.out.printf("name: %s, train: %s, date: %s, seat: %s%n",
-                        rs.getString("user_name"),
-                        rs.getString("train_name"),
-                        rs.getDate("run_date"),
-                        rs.getString("seat_number"));
+                String userName = rs.getString("user_name");
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+                String runDate = rs.getDate("run_date").toString();
+                String seatNumber = rs.getString("seat_number");
+
+                // express면 파란색 처리
+                String colorStart = "";
+                String colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
+                System.out.printf("name: %-10s | train: %-12s | type: %s%-10s%s | date: %s | seat: %s%n",
+                        userName, trainName, colorStart, trainType, colorEnd, runDate, seatNumber);
             }
         }
     }
+
 
     public static void showUserReservations(Scanner scanner) {
         System.out.print("Enter your name: ");
@@ -142,7 +185,7 @@ public class SelectMenu {
         String email = scanner.nextLine().trim();
 
         String sql = """
-        SELECT u.name AS user_name, t.train_name, s.run_date, st.seat_number
+        SELECT u.name AS user_name, t.train_name, t.train_type, s.run_date, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
@@ -160,12 +203,24 @@ public class SelectMenu {
 
             System.out.println("\n[Your Reservations]");
             boolean found = false;
+
             while (rs.next()) {
                 found = true;
-                System.out.printf(" - Train: %s | Date: %s | Seat: %s%n",
-                        rs.getString("train_name"),
-                        rs.getDate("run_date").toString(),
-                        rs.getString("seat_number"));
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+                String runDate = rs.getDate("run_date").toString();
+                String seatNumber = rs.getString("seat_number");
+
+                // express면 파란색 처리
+                String colorStart = "";
+                String colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
+                System.out.printf(" - Train: %-12s | Type: %s%-10s%s | Date: %s | Seat: %s%n",
+                        trainName, colorStart, trainType, colorEnd, runDate, seatNumber);
             }
 
             if (!found) {
@@ -177,6 +232,7 @@ public class SelectMenu {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -214,15 +270,15 @@ public class SelectMenu {
         while (true) {
             // 1. Show all available schedules with remaining seats
             String scheduleListSql = """
-            SELECT s.schedule_id, t.train_name, r.start_station, r.end_station,
-                s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
-            FROM Schedule s
-            JOIN Train t ON s.train_id = t.train_id
-            JOIN Route r ON s.route_id = r.route_id
-            LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
-            GROUP BY s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-            ORDER BY s.schedule_id
-            """;
+SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station,
+       s.run_date, s.departure_time, COUNT(seat.seat_id) AS remaining_seats
+FROM Schedule s
+JOIN Train t ON s.train_id = t.train_id
+JOIN Route r ON s.route_id = r.route_id
+LEFT JOIN Seat seat ON s.schedule_id = seat.schedule_id AND seat.is_reserved = FALSE
+GROUP BY s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+ORDER BY s.schedule_id
+""";
 
             try (
                     Connection conn = ConnectionManager.getConnection();
@@ -230,26 +286,35 @@ public class SelectMenu {
                     ResultSet rs = stmt.executeQuery()
             ) {
                 System.out.println("Current Schedule List:");
-                System.out.printf("%-5s | %-12s | %-12s | %-12s | %-12s | %-10s | %-15s%n",
-                        "ID", "Train", "From", "To", "Run Date", "Time", "Available Seats");
-                System.out.println("--------------------------------------------------------------------------------------------");
+                System.out.printf("%-5s | %-10s | %-10s | %-16s | %-16s | %-12s | %-10s | %-15s%n",
+                        "ID", "Train", "Type", "From", "To", "Run Date", "Time", "Available Seats");
+                System.out.println("-------------------------------------------------------------------------------------------------------------------");
 
                 while (rs.next()) {
                     int id = rs.getInt("schedule_id");
                     String trainName = rs.getString("train_name");
+                    String trainType = rs.getString("train_type");
                     String from = rs.getString("start_station");
                     String to = rs.getString("end_station");
                     String runDate = rs.getDate("run_date").toString();
                     String time = rs.getTime("departure_time").toString();
                     int remaining = rs.getInt("remaining_seats");
 
-                    // 길이 제한 (최대 12자, 너무 길면 ...)
-                    trainName = (trainName.length() > 12) ? trainName.substring(0, 11) + "…" : trainName;
-                    from = (from.length() > 12) ? from.substring(0, 11) + "…" : from;
-                    to = (to.length() > 12) ? to.substring(0, 11) + "…" : to;
+                    // 16자 초과시 자르기
+                    trainType = (trainType.length() > 10) ? trainType.substring(0, 9) + "…" : trainType;
+                    from = (from.length() > 16) ? from.substring(0, 15) + "…" : from;
+                    to = (to.length() > 16) ? to.substring(0, 15) + "…" : to;
 
-                    System.out.printf("%-5d | %-12s | %-12s | %-12s | %-12s | %-10s | %-15d%n",
-                            id, trainName, from, to, runDate, time, remaining);
+                    // express면 파란색 처리
+                    String colorStart = "";
+                    String colorEnd = "";
+                    if ("express".equalsIgnoreCase(trainType)) {
+                        colorStart = "\u001B[34m";  // 파란색
+                        colorEnd = "\u001B[0m";     // 리셋
+                    }
+
+                    System.out.printf("%-5d | %-10s | %s%-10s%s | %-16s | %-16s | %-12s | %-10s | %-15d%n",
+                            id, trainName, colorStart, trainType, colorEnd, from, to, runDate, time, remaining);
                 }
 
                 System.out.println();
@@ -257,6 +322,7 @@ public class SelectMenu {
                 System.out.println("Failed to load schedule list.");
                 e.printStackTrace();
             }
+
 
 
 
@@ -347,7 +413,6 @@ public class SelectMenu {
     }
 
     public static void viewReservedSeatInfo(Scanner scanner) {
-        // 1. 조회 방식 선택
         System.out.println("\n[Search Mode]");
         System.out.println("1. Search by Run Date");
         System.out.println("2. Search by Train Name");
@@ -367,29 +432,79 @@ public class SelectMenu {
                     System.out.println("Invalid date format. Please enter yyyy-mm-dd.");
                 }
                 scheduleSql = """
-                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-                FROM Schedule s
-                JOIN Train t ON s.train_id = t.train_id
-                JOIN Route r ON s.route_id = r.route_id
-                WHERE s.run_date = '""" + date + "' ORDER BY s.schedule_id";
+            SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+            FROM Schedule s
+            JOIN Train t ON s.train_id = t.train_id
+            JOIN Route r ON s.route_id = r.route_id
+            WHERE s.run_date = '""" + date + "' ORDER BY s.schedule_id";
             }
             case "2" -> {
-                System.out.print("Enter train name (partial allowed): ");
-                String train = scanner.nextLine().trim();
-                scheduleSql = """
-                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-                FROM Schedule s
-                JOIN Train t ON s.train_id = t.train_id
-                JOIN Route r ON s.route_id = r.route_id
-                WHERE t.train_name LIKE '%""" + train + "%' ORDER BY s.schedule_id";
+                System.out.print("Enter partial train name: ");
+                String inputName = scanner.nextLine().trim();
+
+                String trainListSql = """
+                SELECT DISTINCT t.train_id, t.train_name, t.train_type
+                FROM Train t
+                WHERE t.train_name LIKE ?
+                ORDER BY t.train_id
+            """;
+
+                try (Connection conn = ConnectionManager.getConnection();
+                     PreparedStatement stmt = conn.prepareStatement(trainListSql)) {
+
+                    stmt.setString(1, "%" + inputName + "%");
+                    ResultSet rs = stmt.executeQuery();
+
+                    System.out.printf("%-5s | %-15s | %-10s%n", "ID", "Train Name", "Type");
+                    System.out.println("-------------------------------------------");
+
+                    List<Integer> validTrainIds = new ArrayList<>();
+                    while (rs.next()) {
+                        int trainId = rs.getInt("train_id");
+                        String name = rs.getString("train_name");
+                        String type = rs.getString("train_type");
+
+                        String colorStart = "", colorEnd = "";
+                        if ("express".equalsIgnoreCase(type)) {
+                            colorStart = "\u001B[34m";
+                            colorEnd = "\u001B[0m";
+                        }
+
+                        System.out.printf("%-5d | %-15s | %s%-10s%s%n", trainId, name, colorStart, type, colorEnd);
+                        validTrainIds.add(trainId);
+                    }
+
+                    if (validTrainIds.isEmpty()) {
+                        System.out.println("No trains found.");
+                        return;
+                    }
+
+                    int trainId;
+                    while (true) {
+                        trainId = InputValidator.getValidInt(scanner, "Enter train ID: ");
+                        if (validTrainIds.contains(trainId)) break;
+                        System.out.println("Invalid train ID. Please try again.");
+                    }
+
+                    scheduleSql = """
+                    SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+                    FROM Schedule s
+                    JOIN Train t ON s.train_id = t.train_id
+                    JOIN Route r ON s.route_id = r.route_id
+                    WHERE t.train_id = """ + trainId + " ORDER BY s.schedule_id";
+                } catch (SQLException e) {
+                    System.out.println("Failed to load trains.");
+                    e.printStackTrace();
+                    return;
+                }
             }
             case "3" -> {
                 scheduleSql = """
-                SELECT s.schedule_id, t.train_name, r.start_station, r.end_station, s.run_date, s.departure_time
-                FROM Schedule s
-                JOIN Train t ON s.train_id = t.train_id
-                JOIN Route r ON s.route_id = r.route_id
-                ORDER BY s.schedule_id""";
+            SELECT s.schedule_id, t.train_name, t.train_type, r.start_station, r.end_station, s.run_date, s.departure_time
+            FROM Schedule s
+            JOIN Train t ON s.train_id = t.train_id
+            JOIN Route r ON s.route_id = r.route_id
+            ORDER BY s.schedule_id""";
             }
             default -> {
                 System.out.println("Invalid input. Returning to menu.");
@@ -405,16 +520,24 @@ public class SelectMenu {
                 ResultSet rs = stmt.executeQuery()
         ) {
             System.out.println("\n[Train Schedules]");
-            System.out.printf("%-5s | %-10s | %-20s | %-20s | %-12s | %-10s%n",
-                    "ID", "Train", "From", "To", "Run Date", "Time");
-            System.out.println("-------------------------------------------------------------------------------");
+            System.out.printf("%-5s | %-10s | %-10s | %-20s | %-20s | %-12s | %-10s%n",
+                    "ID", "Train", "Type", "From", "To", "Run Date", "Time");
+            System.out.println("-----------------------------------------------------------------------------------------------------");
 
             while (rs.next()) {
                 int id = rs.getInt("schedule_id");
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+
+                String colorStart = "", colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
                 validScheduleIds.add(id);
-                System.out.printf("%-5d | %-10s | %-20s | %-20s | %-12s | %-10s%n",
-                        id,
-                        rs.getString("train_name"),
+                System.out.printf("%-5d | %-10s | %s%-10s%s | %-20s | %-20s | %-12s | %-10s%n",
+                        id, trainName, colorStart, trainType, colorEnd,
                         rs.getString("start_station"),
                         rs.getString("end_station"),
                         rs.getDate("run_date").toString(),
@@ -431,7 +554,6 @@ public class SelectMenu {
             return;
         }
 
-        // 2. 스케줄 ID 입력 및 유효성 검사
         int scheduleId;
         while (true) {
             System.out.print("\nEnter a schedule ID to view reserved seats: ");
@@ -448,8 +570,7 @@ public class SelectMenu {
             }
         }
 
-        // 3. 예약된 좌석 조회 및 출력
-        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = TRUE";
+        String reservedSeatSql = "SELECT seat_number FROM Seat WHERE schedule_id = ? AND is_reserved = 1";
         Map<String, List<String>> reservedSeatMap = new TreeMap<>();
 
         try (
@@ -486,7 +607,6 @@ public class SelectMenu {
             return;
         }
 
-        // 4. 좌석 번호 입력 후 예약 정보 조회
         System.out.print("\nEnter seat number to view reservation info: ");
         String seatInput = scanner.nextLine().trim().toUpperCase();
 
@@ -513,7 +633,7 @@ public class SelectMenu {
         }
 
         String reservationDetailSql = """
-        SELECT u.name AS user_name, u.email, s.run_date, t.train_name, st.seat_number
+        SELECT u.name AS user_name, u.email, s.run_date, t.train_name, t.train_type, st.seat_number
         FROM Reservation r
         JOIN User u ON r.user_id = u.user_id
         JOIN Schedule s ON r.schedule_id = s.schedule_id
@@ -531,10 +651,19 @@ public class SelectMenu {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
+                String trainName = rs.getString("train_name");
+                String trainType = rs.getString("train_type");
+                String colorStart = "", colorEnd = "";
+                if ("express".equalsIgnoreCase(trainType)) {
+                    colorStart = "\u001B[34m";
+                    colorEnd = "\u001B[0m";
+                }
+
                 System.out.println("\n[Reservation Details]");
                 System.out.println("User: " + rs.getString("user_name"));
                 System.out.println("Email: " + rs.getString("email"));
-                System.out.println("Train: " + rs.getString("train_name"));
+                System.out.println("Train: " + trainName);
+                System.out.println("Type: " + colorStart + trainType + colorEnd);
                 System.out.println("Run Date: " + rs.getDate("run_date"));
                 System.out.println("Seat: " + rs.getString("seat_number"));
             } else {
@@ -546,6 +675,7 @@ public class SelectMenu {
             e.printStackTrace();
         }
     }
+
 
 
 
